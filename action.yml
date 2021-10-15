@@ -1,0 +1,183 @@
+name: 'Snap Publish'
+description: 'Publish a Snap integration to AWS S3'
+
+inputs:
+  repository:
+    description: 'Repository of Snap implementation to publish'
+    required: true
+  secretKey:
+    description: 'Searchspring account secretKey. Can be obtained in the Searchspring Management Console'
+    required: true
+  skipTests:
+    description: 'Skip running e2e tests'
+    required: false
+    default: false
+  skipLighthouse:
+    description: 'Skip running lighthouse tests'
+    required: false
+    default: false
+  skipPublish:
+    description: 'Skip publishing to cdn'
+    required: false
+    default: false
+  NODE_AUTH_TOKEN:
+    description: 'Node auth token'
+    required: false
+  aws-access-key-id:
+    description: 'AWS access Key'
+    required: true
+  aws-secret-access-key:
+    description: 'AWS secret Key'
+    required: true
+  aws-cloudfront-distribution-id:
+    description: 'AWS cloudfront distribution id'
+    required: true
+  aws-s3-bucket-name:
+    description: 'AWS S3 bucket name'
+    required: true
+  aws-region:
+    description: 'AWS region'
+    required: false
+    default: us-east-2  
+  LHCI_GITHUB_APP_TOKEN:
+    description: 'Lighthouse App Key for PR status updates'
+    required: false
+  GITHUB_BOT_TOKEN:
+    description: 'Github user PAT token for posting lighthouse results in pull request comments'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ inputs.repository }}
+        path: repository
+        fetch-depth: 0
+
+    - name: Extract Variables
+      id: variables
+      shell: bash
+      working-directory: repository
+      run: |
+        if [ "${{ github.event_name }}" == "pull_request" ]; then \
+          branch=${{ github.head_ref }};
+        else
+          branch=`echo ${GITHUB_REF#refs/heads/}`;
+        fi;
+        echo "::set-output name=branch::$branch"
+        echo "Using branch: $branch"
+        siteId=`jq -r '.searchspring.siteId' < package.json`
+        echo "::set-output name=siteId::$siteId"
+        echo "Using siteId: $siteId"
+        pullRequestID=${{ github.event.pull_request.number }}
+        echo "::set-output name=pullRequestID::$pullRequestID"
+        echo "Using pullRequestID: $pullRequestID"
+    
+    - name: Authenticate siteId and secretKey
+      shell: bash
+      working-directory: repository
+      run: |
+        if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verifyKey \
+        -H "Authorization: ${{ inputs.secretKey }}" \
+        -H "accept: application/json" -H "User-Agent:" \
+        | jq .message \
+        | grep -q 'success'; \
+        then echo 'siteId matches account secretKey!'; \
+        else echo 'The provided secretKey does not match the account siteId!'; exit 1; \
+        fi;
+
+    - name: Setup Node
+      uses: actions/setup-node@v2
+      with:
+        node-version: 15
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@searchspring'
+
+    - name: Cache node_modules
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        # npm cache files are stored in `~/.npm` on Linux/macOS
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Install Packages
+      shell: bash
+      working-directory: repository
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
+      run: |
+        npm install
+
+    - name: Build Bundle
+      shell: bash
+      working-directory: repository
+      run: |
+        npm run build
+
+    - name: Run Tests
+      shell: bash
+      working-directory: repository
+      run: |
+        if [ ${{ inputs.skipTests }} = true ]; then echo 'skipping tests'; else npm run test; fi;
+    
+    - name: Lighthouse Tests
+      id: lighthouse
+      shell: bash
+      working-directory: repository
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ inputs.LHCI_GITHUB_APP_TOKEN }}
+      run: |
+        if [ ${{ inputs.skipLighthouse }} = true ]; then \
+          echo 'skipping lighthouse tests'; \
+        elif [ "${{ steps.variables.outputs.pullRequestID }}" == "" ]; then \
+          echo 'no pull request ID found'; \
+        elif [ -f "lighthouserc.js" ]; then \
+          npm run lighthouse && \
+          echo "::set-output name=scores::$(cat lighthouse/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" &&  \
+          echo "::set-output name=report::$(cat lighthouse/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" || exit 1; \
+        else \
+          echo 'lighthouserc.js file not found in repository, skipping lighthouse tests'; \
+        fi
+    
+    - name: PR Comment
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ inputs.GITHUB_BOT_TOKEN || github.token }}
+        script: |
+          ("${{ steps.lighthouse.outputs.scores }}" != '') && ("${{ inputs.LHCI_GITHUB_APP_TOKEN }}" == '') && github.rest.issues.createComment({
+            issue_number: ${{ steps.variables.outputs.pullRequestID || 0 }},
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
+          })
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Copy Files to S3
+      shell: bash
+      working-directory: repository
+      run: |
+        aws s3 sync --delete --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+        aws s3 sync --delete --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/public
+        if [ -f lighthouse/manifest.json ]; then aws s3 sync --acl public-read lighthouse s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
+
+    - name: Invalidate Files
+      shell: bash
+      working-directory: repository
+      run: |
+        aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
+        aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/bundle.js"
+        if [ -f lighthouse/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi;
