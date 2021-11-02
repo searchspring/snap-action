@@ -178,4 +178,5 @@ runs:
       shell: bash
       working-directory: repository
       run: |
+        sleep 3
         aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
