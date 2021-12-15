@@ -91,7 +91,7 @@ runs:
     - name: Setup Node
       uses: actions/setup-node@v2
       with:
-        node-version: 15
+        node-version: 16
         registry-url: 'https://npm.pkg.github.com'
         scope: '@searchspring'
 
@@ -140,7 +140,7 @@ runs:
         elif [ "${{ steps.variables.outputs.pullRequestID }}" == "" ]; then \
           echo 'no pull request ID found'; \
         elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
-          npm run lighthouse && \
+          npm run lighthouse -- --throttling.cpuSlowdownMultiplier=2.2 && \
           echo "::set-output name=scores::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" &&  \
           echo "::set-output name=report::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" || exit 1; \
         else \
@@ -170,8 +170,8 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        aws s3 sync --delete --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
-        aws s3 sync --delete --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+        aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+        aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
         if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
 
     - name: Invalidate Files
@@ -182,5 +182,6 @@ runs:
           aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
         else \
           aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
+          if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi;
         fi
-        if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi;
+        
