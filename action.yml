@@ -133,7 +133,7 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ -d "src/components/Recommendations" ]; snapfu recs sync --secret-key ${{ inputs.secretKey }}; echo 'skipping snapfu recs sync'; fi;
+        if [ -d "src/components/Recommendations" ]; then snapfu recs sync --secret-key ${{ inputs.secretKey }}; else echo 'skipping snapfu recs sync'; fi;
         
         
     - name: Lighthouse Tests
