@@ -121,6 +121,17 @@ runs:
       working-directory: repository
       run: |
         npm run build
+        if [ ! -f "dist/bundle.js" ]; then \
+          echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
+          echo "Missing dist/bundle.js"; \
+          exit 1; \
+        else \
+          if [ ! -f "dist/universal.bundle.js" ]; then \
+            echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
+            echo "Missing dist/universal.bundle.js"; \
+            exit 1; \
+          fi;
+        fi;
 
     - name: Run Tests
       shell: bash
