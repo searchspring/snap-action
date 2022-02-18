@@ -136,14 +136,14 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ ${{ steps.variables.outputs.branch }} = production ]; then \
+        if [ "${{ steps.variables.outputs.pullRequestID }}" == "" ]; then \
           if [ ${{ inputs.skipTests }} = true ]; then \
             echo 'skipping tests due to skipTests flag'; 
           else \
             npm run test; 
           fi;
         else \
-          echo 'skipping tests for ${{ steps.variables.outputs.branch }} branch'; \
+          echo 'skipping tests for push trigger'; \
         fi;
     
     - name: Snapfu Recs Sync
