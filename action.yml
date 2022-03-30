@@ -61,7 +61,7 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ "${{ github.event_name }}" == "pull_request" ]; then \
+        if [ "${{ github.event_name }}" = "pull_request" ]; then \
           branch=${{ github.head_ref }};
         else
           branch=`echo ${GITHUB_REF#refs/heads/}`;
@@ -136,7 +136,7 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ "${{ steps.variables.outputs.pullRequestID }}" == "" ]; then \
+        if [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
           if [ ${{ inputs.skipTests }} = true ]; then \
             echo 'skipping tests due to skipTests flag'; 
           else \
@@ -170,7 +170,7 @@ runs:
       run: |
         if [ ${{ inputs.skipLighthouse }} = true ]; then \
           echo 'skipping lighthouse tests'; \
-        elif [ "${{ steps.variables.outputs.pullRequestID }}" == "" ]; then \
+        elif [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
           echo 'no pull request ID found'; \
         elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
           npm run lighthouse -- --throttling.cpuSlowdownMultiplier=2.2 && \
@@ -203,7 +203,7 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ "${{ github.event_name }}" == "pull_request" ]; then \
+        if [ "${{ github.event_name }}" = "pull_request" ]; then \
           echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
         else \
           aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }} \
