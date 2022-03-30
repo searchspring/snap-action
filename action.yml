@@ -150,17 +150,12 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ -d "src/components/Recommendations" ]; then \
-          if [ ${{ steps.variables.outputs.branch }} = production ]; then \
-            snapfu recs sync --secret-key ${{ inputs.secretKey }}; \
-          else \
-            echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
-          fi; \
+        if [ ${{ steps.variables.outputs.branch }} = production ]; then \
+          snapfu recs sync --secret-key ${{ inputs.secretKey }}; \
         else \
-          echo 'skipping snapfu recs sync'; \
-        fi;
-        
-        
+          echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
+        fi; \
+    
     - name: Lighthouse Tests
       id: lighthouse
       shell: bash
