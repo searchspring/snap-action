@@ -60,6 +60,8 @@ runs:
       id: variables
       shell: bash
       working-directory: repository
+      env:
+        INPUT_REPO: ${{ inputs.repository }}
       run: |
         if [ "${{ github.event_name }}" = "pull_request" ]; then \
           branch=${{ github.head_ref }};
@@ -75,17 +77,18 @@ runs:
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
 
-        pwd
+        repository=`grep -o -E "[^\/]+$" <<< "$INPUT_REPO"`
+        echo "::set-output name=repository::$repository"
+        echo "Using repository: $repository"
+
     
     - name: Authenticate siteId and secretKey
       shell: bash
       working-directory: repository
-      env:
-        repository: ${{ inputs.repository }}
       run: |
         if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
         -X POST \
-        -d '{"name":"`grep -o -E "[^\/]+$" <<< $repository`"}' \
+        -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
         -H "Authorization: ${{ inputs.secretKey }}" \
         -H "accept: application/json" -H "User-Agent:" \
         | jq .message \
