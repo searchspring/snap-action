@@ -74,14 +74,6 @@ runs:
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
-        
-        repository="${{ env.GITHUB_REPOSITORY }}"
-        echo "::set-output name=repository::$repository"
-        echo "Using repository: $repository"
-        
-        siteName=`grep -o -E "[^\/]+$" <<< $repository`
-        echo "::set-output name=siteName::$siteName"
-        echo "Using siteName: $siteName"
     
     - name: Authenticate siteId and secretKey
       shell: bash
@@ -89,7 +81,7 @@ runs:
       run: |
         if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
         -X POST \
-        -d '{"name":"${{ steps.variables.outputs.siteName }}"}' \
+        -d '{"name":"`grep -o -E "[^\/]+$" <<< ${{ inputs.repository }}`"}' \
         -H "Authorization: ${{ inputs.secretKey }}" \
         -H "accept: application/json" -H "User-Agent:" \
         | jq .message \
