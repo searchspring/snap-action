@@ -74,6 +74,8 @@ runs:
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
+
+        pwd
     
     - name: Authenticate siteId and secretKey
       shell: bash
