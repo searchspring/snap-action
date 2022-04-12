@@ -76,18 +76,9 @@ runs:
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
-
-        echo "test1:"
-        echo ${{ inputs.repository }}
-        echo "${{ inputs.repository }}"
-
-        echo "test2:"
-        echo $INPUT_REPO
-        echo "$INPUT_REPO"
-        
-
-        
-
+        repository=`git config --get remote.origin.url | grep -Eo "[^\/]+$" | grep -Eo "(.+)[^(\.git)]"`
+        echo "::set-output name=repository::$repository"
+        echo "Using repository: $repository"
     
     - name: Authenticate siteId and secretKey
       shell: bash
