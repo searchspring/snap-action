@@ -77,9 +77,16 @@ runs:
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
 
-        repository=`grep -o -E "[^\/]+$" <<< "$INPUT_REPO"`
-        echo "::set-output name=repository::$repository"
-        echo "Using repository: $repository"
+        echo "test1:"
+        echo ${{ inputs.repository }}
+        echo "${{ inputs.repository }}"
+
+        echo "test2:"
+        echo $INPUT_REPO
+        echo "$INPUT_REPO"
+        
+
+        
 
     
     - name: Authenticate siteId and secretKey
