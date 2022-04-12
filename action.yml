@@ -74,7 +74,7 @@ runs:
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
-        siteName=`grep -o -E "[^\/]+$" <<< "${{ inputs.repository }}"`
+        siteName=`grep -o -E "[^\/]+$" <<< ${{ inputs.repository }}`
         echo "::set-output name=siteName::$siteName"
         echo "Using siteName: $siteName"
     
