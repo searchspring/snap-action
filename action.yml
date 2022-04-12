@@ -75,7 +75,7 @@ runs:
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
         
-        repository="${{ inputs.repository }}"
+        repository="${{ env.GITHUB_REPOSITORY }}"
         echo "::set-output name=repository::$repository"
         echo "Using repository: $repository"
         
