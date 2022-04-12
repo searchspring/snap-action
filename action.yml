@@ -80,10 +80,12 @@ runs:
     - name: Authenticate siteId and secretKey
       shell: bash
       working-directory: repository
+      env:
+        repository: ${{ inputs.repository }}
       run: |
         if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
         -X POST \
-        -d '{"name":"`grep -o -E "[^\/]+$" <<< ${{ inputs.repository }}`"}' \
+        -d '{"name":"`grep -o -E "[^\/]+$" <<< $repository`"}' \
         -H "Authorization: ${{ inputs.secretKey }}" \
         -H "accept: application/json" -H "User-Agent:" \
         | jq .message \
