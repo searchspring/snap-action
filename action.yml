@@ -74,12 +74,17 @@ runs:
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
+        repository=`git config --get remote.origin.url | grep -Eo "[^\/]+$" | grep -Eo "(.+)[^(\.git)]"`
+        echo "::set-output name=repository::$repository"
+        echo "Using repository: $repository"
     
     - name: Authenticate siteId and secretKey
       shell: bash
       working-directory: repository
       run: |
-        if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verifyKey \
+        if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
+        -X POST \
+        -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
         -H "Authorization: ${{ inputs.secretKey }}" \
         -H "accept: application/json" -H "User-Agent:" \
         | jq .message \
