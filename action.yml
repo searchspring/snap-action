@@ -56,6 +56,13 @@ runs:
         path: repository
         fetch-depth: 0
 
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+        
     - name: Extract Variables
       id: variables
       shell: bash
@@ -192,13 +199,6 @@ runs:
             body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
           })
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ inputs.aws-access-key-id }}
-        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
-        aws-region: ${{ inputs.aws-region }}
-
     - name: Copy Files to S3
       shell: bash
       working-directory: repository
@@ -221,4 +221,9 @@ runs:
           aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
           if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi;
         fi
-        
+
+    - run: date -u +"%FT%TZ" | tr -d '\n' > date.txt && npx -y jjo timestamp=@date.txt type=snap-action data=$(npx -y jjo repository=${{ steps.variables.outputs.repository }} conclusion=${{ github.action_status }}) > SnapAction\[${{ steps.variables.outputs.repository }}\]-$(date -u +"%Y_%m_%d_%H%M").json && aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
+      id: metrics
+      shell: bash
+      if: always()
+    
