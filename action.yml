@@ -265,7 +265,7 @@ runs:
             workspace=${{ github.workspace }} \
           ) \
         > SnapAction\[${{ steps.variables.outputs.repository }}\]-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
-        echo "done";
+        cat SnapAction*;
         
       id: metrics
       shell: bash
