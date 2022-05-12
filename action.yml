@@ -84,7 +84,7 @@ runs:
         repository=`git config --get remote.origin.url | grep -Eo "[^\/]+$" | grep -Eo "(.+)[^(\.git)]"`
         echo "::set-output name=repository::$repository"
         echo "Using repository: $repository"
-        startTime=`date +%s`
+        startTime=`date -u +%s`
         echo "::set-output name=startTime::$startTime"
         echo "Using startTime: $startTime"
     
@@ -230,28 +230,21 @@ runs:
           timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
           type=snap-action \
           data=$(npx -y jjo \
-            repository=${{ steps.variables.outputs.repository }} \
             conclusion=${{ github.action_status }} \
+            durration=$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} ) \
+            repository=${{ steps.variables.outputs.repository }} \
+            repository_owner=${{ github.repository_owner }} \
             branch=${{ steps.variables.outputs.branch }} \
-            durration=$(expr $(date +%s) - ${{ steps.variables.outputs.startTime }} ) \
-            actor=${{ github.actor }} \
             base_ref=${{ github.base_ref }} \
+            actor=${{ github.actor }} \
             event_name=${{ github.event_name }} \
             job=${{ github.job }} \
-            repository_owner=${{ github.repository_owner }} \
-            repositoryUrl=${{ github.repositoryUrl }} \
-            repository_owner=${{ github.repository_owner }} \
-            run_id=${{ github.run_id }} \
-            run_number=${{ github.run_number }} \
             run_attempt=${{ github.run_attempt }} \
-            sha=${{ github.sha }} \
-            workflow=${{ github.workflow }} \
           ) \
         > SnapAction\[${{ steps.variables.outputs.repository }}\]-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
-        cat SnapAction*;
+        aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
         
       id: metrics
       shell: bash
       if: always()
-      # aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
     
