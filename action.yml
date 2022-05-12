@@ -240,6 +240,11 @@ runs:
         fi
 
     - run: |
+        echo "steps: ${{ steps }}"
+        echo "steps*: ${{ steps.* }}"
+        echo "steps.variables.conclusion: ${{ steps.variables.conclusion }}"
+        echo "steps tojson: ${{ toJSON(steps) }}"
+        echo "steps* tojson: ${{ toJSON(steps.*) }}"
         npx -y jjo \
           timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
           type=snap-action \
@@ -254,7 +259,7 @@ runs:
             event_name=${{ github.event_name }} \
             job=${{ github.job }} \
             run_attempt=${{ github.run_attempt }} \
-            steps=${{ toJSON(steps) }}
+            steps=${{ toJSON(steps.*) }}
           ) \
         > SnapAction\[${{ steps.variables.outputs.repository }}\]-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
         cat ./SnapAction*.json && \
