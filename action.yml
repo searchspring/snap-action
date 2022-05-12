@@ -143,6 +143,8 @@ runs:
       shell: bash
       working-directory: repository
       run: |
+        echo "about to exit at build"
+        exit 1
         npm run build
         if [ ! -f "dist/bundle.js" ]; then \
           echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
