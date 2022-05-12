@@ -245,6 +245,7 @@ runs:
         echo "steps.variables.conclusion: ${{ steps.variables.conclusion }}"
         echo "steps tojson: ${{ toJSON(steps) }}"
         echo "steps* tojson: ${{ toJSON(steps.*) }}"
+        
         npx -y jjo \
           timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
           type=snap-action \
@@ -259,7 +260,7 @@ runs:
             event_name=${{ github.event_name }} \
             job=${{ github.job }} \
             run_attempt=${{ github.run_attempt }} \
-            steps=${{ toJSON(steps.*) }}
+            failedOnStep=${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || '' }} \ 
           ) \
         > SnapAction\[${{ steps.variables.outputs.repository }}\]-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
         cat ./SnapAction*.json && \
