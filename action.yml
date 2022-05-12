@@ -240,12 +240,6 @@ runs:
         fi
 
     - run: |
-        echo "steps: ${{ steps }}"
-        echo "steps*: ${{ steps.* }}"
-        echo "steps.variables.conclusion: ${{ steps.variables.conclusion }}"
-        echo "steps tojson: ${{ toJSON(steps) }}"
-        echo "steps* tojson: ${{ toJSON(steps.*) }}"
-        
         npx -y jjo \
           timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
           type=snap-action \
@@ -265,7 +259,6 @@ runs:
         > SnapAction\[${{ steps.variables.outputs.repository }}\]-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
         cat ./SnapAction*.json && \
         aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
-        
       id: metrics
       shell: bash
       if: always()
