@@ -228,41 +228,26 @@ runs:
         fi
 
     - run: |
-        date -u +"%FT%TZ" | tr -d '\n' > date.txt && \
         npx -y jjo \
-          timestamp=@date.txt \
+          timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
           type=snap-action \
           data=$(npx -y jjo \
             repository=${{ steps.variables.outputs.repository }} \
             conclusion=${{ github.action_status }} \
             branch=${{ steps.variables.outputs.branch }} \
-            durration=$(expr ${{ steps.variables.outputs.startTime }} - $(date +%s)) \
-            action=${{ github.action }} \
-            action_path=${{ github.action_path }} \
-            action_ref=${{ github.action_ref }} \
-            action_repository=${{ github.action_repository }} \
+            durration=$(expr $(date +%s) - ${{ steps.variables.outputs.startTime }} ) \
             actor=${{ github.actor }} \
             base_ref=${{ github.base_ref }} \
             event_name=${{ github.event_name }} \
-            event_path=${{ github.event_path }} \
-            head_ref=${{ github.head_ref }} \
             job=${{ github.job }} \
-            ref=${{ github.ref }} \
-            ref_name=${{ github.ref_name }} \
-            ref_protected=${{ github.ref_protected }} \
-            ref_type=${{ github.ref_type }} \
-            path=${{ github.path }} \
-            repository=${{ github.repository }} \
             repository_owner=${{ github.repository_owner }} \
             repositoryUrl=${{ github.repositoryUrl }} \
             repository_owner=${{ github.repository_owner }} \
-            retention_days=${{ github.retention_days }} \
             run_id=${{ github.run_id }} \
             run_number=${{ github.run_number }} \
             run_attempt=${{ github.run_attempt }} \
             sha=${{ github.sha }} \
             workflow=${{ github.workflow }} \
-            workspace=${{ github.workspace }} \
           ) \
         > SnapAction\[${{ steps.variables.outputs.repository }}\]-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
         cat SnapAction*;
