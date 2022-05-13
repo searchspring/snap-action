@@ -243,16 +243,16 @@ runs:
           type=snap-action \
           data=$(npx -y jjo \
             conclusion=${{ github.action_status }} \
-            durration=$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} ) \
+            duration=$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} ) \
             repository=${{ steps.variables.outputs.repository }} \
-            repository_owner=${{ github.repository_owner }} \
+            repositoryOwner=${{ github.repository_owner }} \
             branch=${{ steps.variables.outputs.branch }} \
-            base_ref=${{ github.base_ref }} \
+            baseRef=${{ github.base_ref }} \
             actor=${{ github.actor }} \
-            event_name=${{ github.event_name }} \
+            eventName=${{ github.event_name }} \
             job=${{ github.job }} \
             url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
-            run_attempt=${{ github.run_attempt }} \
+            runAttempt=${{ github.run_attempt }} \
             failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || ''}}' \
           ) \
         > SnapAction\[${{ steps.variables.outputs.repository }}\]-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
