@@ -50,12 +50,21 @@ runs:
   using: "composite"
   steps:
     - name: Checkout Repository
+      id: checkout-repo
       uses: actions/checkout@v2
       with:
         repository: ${{ inputs.repository }}
         path: repository
         fetch-depth: 0
 
+    - name: Configure AWS credentials
+      id: configure-aws
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+        
     - name: Extract Variables
       id: variables
       shell: bash
@@ -77,8 +86,12 @@ runs:
         repository=`git config --get remote.origin.url | grep -Eo "[^\/]+$" | grep -Eo "(.+)[^(\.git)]"`
         echo "::set-output name=repository::$repository"
         echo "Using repository: $repository"
+        startTime=`date -u +%s`
+        echo "::set-output name=startTime::$startTime"
+        echo "Using startTime: $startTime"
     
     - name: Authenticate siteId and secretKey
+      id: authenticate
       shell: bash
       working-directory: repository
       run: |
@@ -94,6 +107,7 @@ runs:
         fi;
 
     - name: Setup Node
+      id: setup-node
       uses: actions/setup-node@v2
       with:
         node-version: 16
@@ -101,6 +115,7 @@ runs:
         scope: '@searchspring'
 
     - name: Cache node_modules
+      id: cache
       uses: actions/cache@v2
       env:
         cache-name: cache-node-modules
@@ -114,6 +129,7 @@ runs:
           ${{ runner.os }}-
 
     - name: Install Packages
+      id: install
       shell: bash
       working-directory: repository
       env:
@@ -123,6 +139,7 @@ runs:
         npm install -g snapfu
 
     - name: Build Bundle
+      id: build
       shell: bash
       working-directory: repository
       run: |
@@ -138,6 +155,7 @@ runs:
         fi;
 
     - name: Run Tests
+      id: test
       shell: bash
       working-directory: repository
       run: |
@@ -152,6 +170,7 @@ runs:
         fi;
     
     - name: Snapfu Recs Sync
+      id: snapfu-recs-sync
       shell: bash
       working-directory: repository
       run: |
@@ -181,6 +200,7 @@ runs:
         fi
     
     - name: PR Comment
+      id: pr-comment
       uses: actions/github-script@v5
       with:
         github-token: ${{ inputs.GITHUB_BOT_TOKEN || github.token }}
@@ -192,14 +212,8 @@ runs:
             body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
           })
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ inputs.aws-access-key-id }}
-        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
-        aws-region: ${{ inputs.aws-region }}
-
     - name: Copy Files to S3
+      id: s3-upload
       shell: bash
       working-directory: repository
       run: |
@@ -212,6 +226,7 @@ runs:
         if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
 
     - name: Invalidate Files
+      id: invalidation
       shell: bash
       working-directory: repository
       run: |
@@ -221,4 +236,29 @@ runs:
           aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
           if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi;
         fi
-        
+
+    - run: |
+        npx -y jjo \
+          timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
+          type=snap-action \
+          data=$(npx -y jjo \
+            conclusion=${{ github.action_status }} \
+            duration=$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} ) \
+            repository=${{ steps.variables.outputs.repository }} \
+            repositoryOwner=${{ github.repository_owner }} \
+            branch=${{ steps.variables.outputs.branch }} \
+            baseRef=${{ github.base_ref }} \
+            actor=${{ github.actor }} \
+            eventName=${{ github.event_name }} \
+            job=${{ github.job }} \
+            url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
+            runAttempt=${{ github.run_attempt }} \
+            failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || ''}}' \
+          ) \
+        > SnapAction\[${{ steps.variables.outputs.repository }}\]-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
+        cat ./SnapAction*.json && \
+        aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
+      id: metrics
+      shell: bash
+      if: always()
+    
