@@ -162,11 +162,13 @@ runs:
         if [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
           if [ ${{ inputs.skipTests }} = true ]; then \
             echo 'skipping tests due to skipTests flag'; 
+          elif [ ${{ steps.variables.outputs.branch }} = production ]; then \
+            echo "skipping tests for push triggers to production"; \
           else \
-            npm run test; 
-          fi;
+            npm run test; \
+          fi; \
         else \
-          echo 'skipping tests for push trigger'; \
+          echo 'skipping tests for pull_request triggers'; \
         fi;
     
     - name: Snapfu Recs Sync
