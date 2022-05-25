@@ -7,8 +7,7 @@ const METRICS_DIR = './metrics/data';
 (async function () {
 	try {
 		await prepare();
-
-		await generateMetrics(now);
+		await generateMetrics();
 	} catch (err) {
 		console.error('unable to process coverage file');
 		console.error(err);
