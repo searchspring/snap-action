@@ -9,7 +9,7 @@ const METRICS_DIR = './metrics/data';
 		await prepare();
 		await generateMetrics();
 	} catch (err) {
-		console.error('unable to process coverage file');
+		console.error('unable to process lighthouse file');
 		console.error(err);
 		exit(1);
 	}
