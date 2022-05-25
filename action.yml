@@ -218,10 +218,10 @@ runs:
       id: lighthouse-metrics
       shell: bash
       run: |
-        pwd
+        npm install -g minimist
+        node scripts/metrics/lighthouse.js siteId=${{ steps.variables.outputs.siteId }} branch=${{ steps.variables.outputs.branch }} issue_number=${{ steps.variables.outputs.pullRequestID || 0 }} repository_owner=${{ github.repository_owner }} repository=${{ steps.variables.outputs.repository }}
         ls -la
-        node -v
-        node scripts/metrics/lighthouse.js
+        ls -la repository/metrics/data
         
     # - name: Copy Files to S3
     #   id: s3-upload
