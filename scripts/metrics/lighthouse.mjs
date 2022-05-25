@@ -18,8 +18,10 @@ const METRICS_DIR = './metrics/data';
 
 async function prepare() {
 	try {
+        console.log("got here1")
 		await fsp.stat(METRICS_DIR);
 	} catch (err) {
+        console.log("got here2")
 		// make metrics directory
 	    await fsp.mkdir(METRICS_DIR);
 	}
@@ -31,6 +33,7 @@ async function generateMetrics() {
 	} catch (err) {
 		throw 'no lighthouse data found!';
 	}
+    console.log("got here3")
 
     const now = new Date();
     const argv = require('minimist')(process.argv.slice(2));
@@ -71,6 +74,7 @@ async function generateMetrics() {
     const filename = `SnapAction-${repository}-pull_request}${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}_${now.getHours()}${now.getMinutes()}.json`;
     const contents = JSON.stringify(obj, null, '  ');
 
+    console.log("got here4")
     await fsp.writeFile(`${METRICS_DIR}/${filename}`, contents);
 
     console.log(`Generated lighthouse metrics file: ${filename}`);
