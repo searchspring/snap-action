@@ -231,6 +231,8 @@ runs:
       id: invalidation
       shell: bash
       working-directory: repository
+      env:
+        AWS_MAX_ATTEMPTS: 9
       run: |
         if [ ${{ steps.variables.outputs.branch }} = production ]; then \
           aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
