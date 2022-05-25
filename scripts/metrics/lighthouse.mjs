@@ -23,7 +23,7 @@ async function prepare() {
 	} catch (err) {
         console.log("got here2")
 		// make metrics directory
-	    await fsp.mkdir(METRICS_DIR);
+	    await fsp.mkdir(METRICS_DIR, { recursive: true });
 	}
 }
 
