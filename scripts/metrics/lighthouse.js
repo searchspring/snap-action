@@ -42,6 +42,11 @@ async function generateMetrics() {
     const argv = minimist(process.argv.slice(2));
     console.log("argv", argv)
     console.log("github.context", github.context)
+    const inputvariables = core.getInput('variables');
+    const inputsiteId = core.getInput('siteId');
+    console.log("inputvariables", inputvariables)
+    console.log("inputsiteId", inputsiteId)
+
 
 	const lighthouseContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
 	const lighthouseData = JSON.parse(lighthouseContents);
