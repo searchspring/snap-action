@@ -41,22 +41,18 @@ async function generateMetrics() {
 	const lighthouseContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
 	const lighthouseData = JSON.parse(lighthouseContents);
 
-    const representativeRun = lighthouseData.filter(run => run.isRepresentativeRun);
-    console.log("representativeRun", representativeRun)
-    console.log("representativeRun", JSON.stringify(representativeRun))
-    const summary = representativeRun.map(run => {
-        const { performance, accessibility, seo, pwa  } = run.summary;
-        const bestPractices = run.summary['best-practices'];
+    const representativeRun = lighthouseData.filter(run => run.isRepresentativeRun).pop();
 
-        return {
-            performance: toPercentage(performance),
-            accessibility: toPercentage(accessibility),
-            bestPractices: toPercentage(bestPractices),
-            seo: toPercentage(seo),
-            pwa: toPercentage(pwa),
-            performance: toPercentage(performance),
-        };
-    }).pop();
+    const { performance, accessibility, seo, pwa  } = representativeRun.summary;
+    const bestPractices = representativeRun.summary['best-practices'];
+    const summary = {
+        performance: toPercentage(performance),
+        accessibility: toPercentage(accessibility),
+        bestPractices: toPercentage(bestPractices),
+        seo: toPercentage(seo),
+        pwa: toPercentage(pwa),
+        performance: toPercentage(performance),
+    };    
 
     const { siteId, branch, repository_owner, repository, issue_number } = argv;
     const reportHTMLFile = representativeRun.htmlPath.split('/').pop();
