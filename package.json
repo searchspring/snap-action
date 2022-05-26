@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/searchspring/snap-action#readme",
   "dependencies": {
-    "@actions/core": "^1.8.2",
     "@actions/github": "^5.0.3",
     "minimist": "^1.2.6"
   }

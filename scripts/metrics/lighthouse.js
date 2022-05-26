@@ -1,11 +1,10 @@
 const fsp = require('fs').promises;
 const exit = require('process').exit;
 const minimist = require('minimist');
-const core = require('@actions/core');
 const github = require('@actions/github');
 
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
-const METRICS_DIR = './metrics/data';
+const METRICS_DIR = './metrics';
 
 (async function () {
 	try {
@@ -67,11 +66,11 @@ async function generateMetrics() {
             repository: github.context.payload.repository.name,
             issue_number: github.context.payload.pull_request.number,
             report,
-            scores
+            scores,
         }
     };
     
-    const filename = `SnapAction-${github.context.payload.repository.name}-${github.eventName}}${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}_${now.getHours()}${now.getMinutes()}.json`;
+    const filename = `SnapAction-${github.context.payload.repository.name}-${github.context.eventName}}${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}_${now.getHours()}${now.getMinutes()}.json`;
     const contents = JSON.stringify(obj, null, '  ');
 
     await fsp.writeFile(`${METRICS_DIR}/${filename}`, contents);
