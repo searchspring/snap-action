@@ -1,6 +1,8 @@
 const fsp = require('fs').promises;
 const exit = require('process').exit;
 const minimist = require('minimist');
+const core = require('@actions/core');
+const github = require('@actions/github');
 
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics/data';
@@ -35,8 +37,11 @@ async function generateMetrics() {
 	}
     console.log("got here3")
 
-    const now = new Date();
+    const now = new Date()
+    console.log("process.argv", process.argv)
     const argv = minimist(process.argv.slice(2));
+    console.log("argv", argv)
+    console.log("github.context", github.context)
 
 	const lighthouseContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
 	const lighthouseData = JSON.parse(lighthouseContents);
@@ -57,10 +62,12 @@ async function generateMetrics() {
     const { siteId, branch, repository_owner, repository, issue_number } = argv;
     const reportHTMLFile = representativeRun.htmlPath.split('/').pop();
     const report = `https://snapui.searchspring.io/${siteId}/.lighthouse/${branch}/${reportHTMLFile}`;
+    //              https://snapui.searchspring.io/undefined/.lighthouse/undefined/localhost-_lighthouse_html-2022_05_26_14_47_08.report.html",
     const obj = {
         timestamp: now,
         type: 'snap-lighthouse',
         data: {
+            branch,
             repository_owner,
             repository,
             issue_number,
