@@ -1,5 +1,6 @@
-import { promises as fsp } from 'fs';
-import { exit } from 'process';
+const fsp = require('fs').promises;
+const exit = require('process').exit;
+const minimist = require('minimist');
 
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics/data';
@@ -35,7 +36,7 @@ async function generateMetrics() {
     console.log("got here3")
 
     const now = new Date();
-    const argv = require('minimist')(process.argv.slice(2));
+    const argv = minimist(process.argv.slice(2));
 
 	const lighthouseContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
 	const lighthouseData = JSON.parse(lighthouseContents);
