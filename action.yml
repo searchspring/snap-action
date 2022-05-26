@@ -220,7 +220,7 @@ runs:
       run: |
         ls -la
         npm install
-        node scripts/metrics/lighthouse.js siteId=${{ steps.variables.outputs.siteId }} branch=${{ steps.variables.outputs.branch }} issue_number=${{ steps.variables.outputs.pullRequestID || 0 }} repository_owner=${{ github.repository_owner }} repository=${{ steps.variables.outputs.repository }}
+        node scripts/metrics/lighthouse.js --siteId ${{ steps.variables.outputs.siteId }} --branch ${{ steps.variables.outputs.branch }} --repository ${{ steps.variables.outputs.repository }}
         ls -la
         
     # - name: Copy Files to S3
