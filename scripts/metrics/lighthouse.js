@@ -63,15 +63,15 @@ async function generateMetrics() {
         data: {
             siteId,
             branch,
-            repository_owner: github.payload.organization.login,
-            repository: github.payload.repository.name,
-            issue_number: github.payload.pull_request.number,
+            repository_owner: github.context.payload.organization.login,
+            repository: github.context.payload.repository.name,
+            issue_number: github.context.payload.pull_request.number,
             report,
             scores
         }
     };
     
-    const filename = `SnapAction-${github.payload.repository.name}-${github.eventName}}${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}_${now.getHours()}${now.getMinutes()}.json`;
+    const filename = `SnapAction-${github.context.payload.repository.name}-${github.eventName}}${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}_${now.getHours()}${now.getMinutes()}.json`;
     const contents = JSON.stringify(obj, null, '  ');
 
     await fsp.writeFile(`${METRICS_DIR}/${filename}`, contents);
