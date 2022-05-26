@@ -63,7 +63,7 @@ async function generateMetrics() {
         data: {
             siteId,
             branch,
-            repository_owner: github.organization.login,
+            repository_owner: github.payload.organization.login,
             repository: github.payload.repository.name,
             issue_number: github.payload.pull_request.number,
             report,
