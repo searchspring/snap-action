@@ -35,20 +35,17 @@ async function generateMetrics() {
 	}
 
     const now = new Date()
-    console.log("process.argv", process.argv)
     const argv = minimist(process.argv.slice(2),  { '--': true });
-    console.log("argv", argv)
-    console.log("github.context", github.context)
 
-
-	const lighthouseContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
-	const lighthouseData = JSON.parse(lighthouseContents);
+	const lighthouseFileContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
+	const lighthouseData = JSON.parse(lighthouseFileContents);
 
     const representativeRun = lighthouseData.filter(run => run.isRepresentativeRun).pop();
 
-    const { performance, accessibility, seo, pwa  } = representativeRun.summary;
+    const { performance, accessibility, seo, pwa } = representativeRun.summary;
     const bestPractices = representativeRun.summary['best-practices'];
-    const summary = {
+
+    const scores = {
         performance: toPercentage(performance),
         accessibility: toPercentage(accessibility),
         bestPractices: toPercentage(bestPractices),
@@ -57,10 +54,9 @@ async function generateMetrics() {
         performance: toPercentage(performance),
     };    
 
-    const { siteId, branch, repository } = argv;
+    const { siteId, branch } = argv;
     const reportHTMLFile = representativeRun.htmlPath.split('/').pop();
     const report = `https://snapui.searchspring.io/${siteId}/.lighthouse/${branch}/${reportHTMLFile}`;
-    //              https://snapui.searchspring.io/undefined/.lighthouse/undefined/localhost-_lighthouse_html-2022_05_26_14_47_08.report.html",
     const obj = {
         timestamp: now,
         type: 'snap-lighthouse',
@@ -68,10 +64,10 @@ async function generateMetrics() {
             siteId,
             branch,
             repository_owner: github.repository_owner,
-            repository,
-            issue_number: github.issue_number,
+            repository: github.repository.name,
+            issue_number: github.pull_request.number,
             report,
-            summary
+            scores
         }
     };
     
