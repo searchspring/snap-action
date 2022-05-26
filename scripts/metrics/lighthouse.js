@@ -42,6 +42,8 @@ async function generateMetrics() {
 	const lighthouseData = JSON.parse(lighthouseContents);
 
     const representativeRun = lighthouseData.filter(run => run.isRepresentativeRun);
+    console.log("representativeRun", representativeRun)
+    console.log("representativeRun", JSON.stringify(representativeRun))
     const summary = representativeRun.map(run => {
         const { performance, accessibility, seo, pwa  } = run.summary;
         const bestPractices = run.summary['best-practices'];
