@@ -1,0 +1,22 @@
+{
+  "name": "snap-action",
+  "version": "1.0.0",
+  "description": "This action publishes a Searchspring [Snap](https://github.com/searchspring/snap) implementation bundle to AWS S3.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/searchspring/snap-action.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/searchspring/snap-action/issues"
+  },
+  "homepage": "https://github.com/searchspring/snap-action#readme",
+  "dependencies": {
+    "minimist": "^1.2.6"
+  }
+}
