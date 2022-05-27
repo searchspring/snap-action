@@ -7,37 +7,37 @@ const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics';
 
 (async function () {
-	try {
-		await prepare();
-		await generateMetrics();
-	} catch (err) {
-		console.error('unable to process lighthouse file');
-		console.error(err);
-		exit(1);
-	}
+    try {
+        await prepare();
+        await generateMetrics();
+    } catch (err) {
+        console.error('unable to process lighthouse file');
+        console.error(err);
+        exit(1);
+    }
 })();
 
 async function prepare() {
-	try {
-		await fsp.stat(METRICS_DIR);
-	} catch (err) {
-		// make metrics directory
-	    await fsp.mkdir(METRICS_DIR, { recursive: true });
-	}
+    try {
+        await fsp.stat(METRICS_DIR);
+    } catch (err) {
+        // make metrics directory
+        await fsp.mkdir(METRICS_DIR, { recursive: true });
+    }
 }
 
 async function generateMetrics() {
-	try {
-		await fsp.stat(LIGHTHOUSE_FILE);
-	} catch (err) {
-		throw 'no lighthouse data found!';
-	}
+    try {
+        await fsp.stat(LIGHTHOUSE_FILE);
+    } catch (err) {
+        throw 'no lighthouse data found!';
+    }
 
     const now = new Date()
     const argv = minimist(process.argv.slice(2),  { '--': true });
 
-	const lighthouseFileContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
-	const lighthouseData = JSON.parse(lighthouseFileContents);
+    const lighthouseFileContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
+    const lighthouseData = JSON.parse(lighthouseFileContents);
 
     const representativeRun = lighthouseData.filter(run => run.isRepresentativeRun).pop();
 
@@ -58,13 +58,13 @@ async function generateMetrics() {
     const report = `https://snapui.searchspring.io/${siteId}/.lighthouse/${branch}/${reportHTMLFile}`;
     const obj = {
         timestamp: now,
-        type: 'snap-lighthouse',
+        type: 'snap-action-lighthouse',
         data: {
             siteId,
             branch,
-            repository_owner: github.context.payload.organization.login,
+            repositoryOwner: github.context.payload.organization.login,
             repository: github.context.payload.repository.name,
-            issue_number: github.context.payload.pull_request.number,
+            issueNumber: github.context.payload.pull_request.number,
             report,
             scores,
         }
