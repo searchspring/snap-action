@@ -2,11 +2,18 @@ const fsp = require('fs').promises;
 const exit = require('process').exit;
 const minimist = require('minimist');
 const github = require('@actions/github');
+const core = require('@actions/core');
 
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics';
 
 (async function () {
+    const skipLighthouse = core.getBooleanInput('skipLighthouse');
+    if (skipLighthouse) {
+        console.log('Skipping lighthouse metrics generation due to skipLighthouse flag')
+        exit(0);
+    }
+
     try {
         await prepare();
         await generateMetrics();
@@ -30,7 +37,7 @@ async function generateMetrics() {
     try {
         await fsp.stat(LIGHTHOUSE_FILE);
     } catch (err) {
-        throw 'no lighthouse data found!';
+        throw 'Could not find lighthouse manifest.json file';
     }
 
     const now = new Date()
