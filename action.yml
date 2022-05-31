@@ -213,7 +213,17 @@ runs:
             repo: context.repo.repo,
             body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
           })
-
+          
+    - name: Lighthouse Metrics
+      id: lighthouse-metrics
+      shell: bash
+      run: |
+        npm install
+        node scripts/metrics/lighthouse.js --siteId ${{ steps.variables.outputs.siteId }} --branch ${{ steps.variables.outputs.branch }}
+        if [ -f metrics/SnapAction*.json ]; then \
+          aws s3 cp --region us-east-1 ./metrics/SnapAction*.json s3://datawarehouse-stage/team-metrics-import/; \
+        fi;
+        
     - name: Copy Files to S3
       id: s3-upload
       shell: bash
@@ -257,7 +267,7 @@ runs:
             job=${{ github.job }} \
             url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
             runAttempt=${{ github.run_attempt }} \
-            failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || ''}}' \
+            failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || ''}}' \
           ) \
         > SnapAction-${{ steps.variables.outputs.repository }}-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
         cat ./SnapAction*.json && \
