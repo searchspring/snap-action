@@ -8,7 +8,8 @@ const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics';
 
 (async function () {
-    const skipLighthouse = core.getBooleanInput('skipLighthouse');
+    const skipLighthouse = core.getInput('skipLighthouse');
+    console.log("skipLighthouse", skipLighthouse)
     if (skipLighthouse) {
         console.log('Skipping lighthouse metrics generation due to skipLighthouse flag')
         exit(0);
