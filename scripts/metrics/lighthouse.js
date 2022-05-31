@@ -7,11 +7,17 @@ const core = require('@actions/core');
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics';
 
+
 (async function () {
     const skipLighthouse = core.getInput('skipLighthouse');
     console.log("skipLighthouse", skipLighthouse)
     if (skipLighthouse) {
         console.log('Skipping lighthouse metrics generation due to skipLighthouse flag')
+        exit(0);
+    }
+
+    if(github.context.eventName !== 'pull_request') {
+        console.log('Skipping lighthouse metrics generation due to non pull_request event')
         exit(0);
     }
 
