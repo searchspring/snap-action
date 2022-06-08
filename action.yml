@@ -220,7 +220,7 @@ runs:
       run: |
         if [ ${{ inputs.skipLighthouse }} = true ]; then \
           echo 'skipping lighthouse metrics generation due to skipLighthouse flag'; \
-        elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
+        elif [ -f "repository/tests/lighthouse/lighthouserc.js" ]; then \
           npm install \
           node scripts/metrics/lighthouse.js --siteId ${{ steps.variables.outputs.siteId }} --branch ${{ steps.variables.outputs.branch }} \
         fi
