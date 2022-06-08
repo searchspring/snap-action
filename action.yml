@@ -218,8 +218,9 @@ runs:
       id: lighthouse-metrics
       shell: bash
       run: |
-        if [ ! ${{ inputs.skipLighthouse }} = true ]; then \
-          npm install && node scripts/metrics/lighthouse.js --siteId ${{ steps.variables.outputs.siteId }} --branch ${{ steps.variables.outputs.branch }} \
+        if [ ${{ inputs.skipLighthouse }} = false ]; then \
+          npm install;
+          node scripts/metrics/lighthouse.js --siteId ${{ steps.variables.outputs.siteId }} --branch ${{ steps.variables.outputs.branch }} \;
         else \
           echo "skipping lighthouse metrics generation due to skipLighthouse flag"; \
         fi;
