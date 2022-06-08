@@ -218,10 +218,10 @@ runs:
       id: lighthouse-metrics
       shell: bash
       run: |
-        if [ ${{ inputs.skipLighthouse }} = true ]; then \
-          echo "skipping lighthouse metrics generation due to skipLighthouse flag"; \
-        elif [ -f "repository/tests/lighthouse/lighthouserc.js" ]; then \
+        if [ ! ${{ inputs.skipLighthouse }} = true ]; then \
           npm install && node scripts/metrics/lighthouse.js --siteId ${{ steps.variables.outputs.siteId }} --branch ${{ steps.variables.outputs.branch }} \
+        else \
+          echo "skipping lighthouse metrics generation due to skipLighthouse flag"; \
         fi;
         if [ -f metrics/SnapAction*.json ]; then \
           aws s3 cp --region us-east-1 ./metrics/SnapAction*.json s3://datawarehouse-stage/team-metrics-import/; \
