@@ -103,7 +103,7 @@ runs:
         | jq .message \
         | grep -q 'success'; \
         then echo 'siteId matches account secretKey!'; \
-        else echo 'The provided secretKey does not match the account siteId!'; exit 1; \
+        else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
         fi;
 
     - name: Setup Node
