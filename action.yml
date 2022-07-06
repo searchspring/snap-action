@@ -45,6 +45,12 @@ inputs:
   GITHUB_BOT_TOKEN:
     description: 'Github user PAT token for posting lighthouse results in pull request comments'
     required: false
+  secrets:
+    required: false
+  secretsJSON:
+    required: false
+  secretsWildcard:
+    required: false
 
 runs:
   using: "composite"
@@ -77,9 +83,18 @@ runs:
         fi;
         echo "::set-output name=branch::$branch"
         echo "Using branch: $branch"
-        siteId=`jq -r '.searchspring.siteId' < package.json`
-        echo "::set-output name=siteId::$siteId"
-        echo "Using siteId: $siteId"
+
+        echo "inputs.secrets: ${{ inputs.secrets }}"
+        echo "inputs.secrets['VRNTN7_SECRET_KEY']: ${{ inputs.secrets['VRNTN7_SECRET_KEY'] }}"
+        echo "inputs.secrets.VRNTN7_SECRET_KEY: ${{ inputs.secrets.VRNTN7_SECRET_KEY }}"
+        echo "inputs.secretsJSON: ${{ inputs.secretsJSON }}"
+        echo "fromJSON: fromJSON(${{ inputs.secretsJSON }})"
+        echo "inputs.secretsWildcard: ${{ inputs.secretsWildcard }}"
+
+        # siteId=`jq -r '.searchspring.siteId' < package.json`
+        # echo "::set-output name=siteId::$siteId"
+        # echo "Using siteId: $siteId"
+
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
@@ -90,193 +105,193 @@ runs:
         echo "::set-output name=startTime::$startTime"
         echo "Using startTime: $startTime"
     
-    - name: Authenticate siteId and secretKey
-      id: authenticate
-      shell: bash
-      working-directory: repository
-      run: |
-        if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
-        -X POST \
-        -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
-        -H "Authorization: ${{ inputs.secretKey }}" \
-        -H "accept: application/json" -H "User-Agent:" \
-        | jq .message \
-        | grep -q 'success'; \
-        then echo 'siteId matches account secretKey!'; \
-        else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
-        fi;
+    # - name: Authenticate siteId and secretKey
+    #   id: authenticate
+    #   shell: bash
+    #   working-directory: repository
+    #   run: |
+    #     if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
+    #     -X POST \
+    #     -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
+    #     -H "Authorization: ${{ inputs.secretKey }}" \
+    #     -H "accept: application/json" -H "User-Agent:" \
+    #     | jq .message \
+    #     | grep -q 'success'; \
+    #     then echo 'siteId matches account secretKey!'; \
+    #     else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
+    #     fi;
 
-    - name: Setup Node
-      id: setup-node
-      uses: actions/setup-node@v2
-      with:
-        node-version: 16
-        registry-url: 'https://npm.pkg.github.com'
-        scope: '@searchspring'
+    # - name: Setup Node
+    #   id: setup-node
+    #   uses: actions/setup-node@v2
+    #   with:
+    #     node-version: 16
+    #     registry-url: 'https://npm.pkg.github.com'
+    #     scope: '@searchspring'
 
-    - name: Cache node_modules
-      id: cache
-      uses: actions/cache@v2
-      env:
-        cache-name: cache-node-modules
-      with:
-        # npm cache files are stored in `~/.npm` on Linux/macOS
-        path: ~/.npm
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
+    # - name: Cache node_modules
+    #   id: cache
+    #   uses: actions/cache@v2
+    #   env:
+    #     cache-name: cache-node-modules
+    #   with:
+    #     # npm cache files are stored in `~/.npm` on Linux/macOS
+    #     path: ~/.npm
+    #     key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-build-${{ env.cache-name }}-
+    #       ${{ runner.os }}-build-
+    #       ${{ runner.os }}-
 
-    - name: Install Packages
-      id: install
-      shell: bash
-      working-directory: repository
-      env:
-        NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
-      run: |
-        npm install
-        npm install -g snapfu
+    # - name: Install Packages
+    #   id: install
+    #   shell: bash
+    #   working-directory: repository
+    #   env:
+    #     NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
+    #   run: |
+    #     npm install
+    #     npm install -g snapfu
 
-    - name: Build Bundle
-      id: build
-      shell: bash
-      working-directory: repository
-      run: |
-        npm run build
-        if [ ! -f "dist/bundle.js" ]; then \
-          echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
-          echo "Missing dist/bundle.js"; \
-          exit 1; \
-        elif [ ! -f "dist/universal.bundle.js" ]; then \
-          echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
-          echo "Missing dist/universal.bundle.js"; \
-          exit 1; \
-        fi;
+    # - name: Build Bundle
+    #   id: build
+    #   shell: bash
+    #   working-directory: repository
+    #   run: |
+    #     npm run build
+    #     if [ ! -f "dist/bundle.js" ]; then \
+    #       echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
+    #       echo "Missing dist/bundle.js"; \
+    #       exit 1; \
+    #     elif [ ! -f "dist/universal.bundle.js" ]; then \
+    #       echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
+    #       echo "Missing dist/universal.bundle.js"; \
+    #       exit 1; \
+    #     fi;
 
-    - name: Run Tests
-      id: test
-      shell: bash
-      working-directory: repository
-      run: |
-        if [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
-          if [ ${{ inputs.skipTests }} = true ]; then \
-            echo 'skipping tests due to skipTests flag'; 
-          elif [ ${{ steps.variables.outputs.branch }} = production ]; then \
-            echo "skipping tests for push triggers to production"; \
-          else \
-            npm run test; \
-          fi; \
-        else \
-          echo 'skipping tests for pull_request triggers'; \
-        fi;
+    # - name: Run Tests
+    #   id: test
+    #   shell: bash
+    #   working-directory: repository
+    #   run: |
+    #     if [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
+    #       if [ ${{ inputs.skipTests }} = true ]; then \
+    #         echo 'skipping tests due to skipTests flag'; 
+    #       elif [ ${{ steps.variables.outputs.branch }} = production ]; then \
+    #         echo "skipping tests for push triggers to production"; \
+    #       else \
+    #         npm run test; \
+    #       fi; \
+    #     else \
+    #       echo 'skipping tests for pull_request triggers'; \
+    #     fi;
     
-    - name: Snapfu Recs Sync
-      id: snapfu-recs-sync
-      shell: bash
-      working-directory: repository
-      run: |
-        if [ ${{ steps.variables.outputs.branch }} = production ]; then \
-          snapfu recs sync --secret-key ${{ inputs.secretKey }}; \
-        else \
-          echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
-        fi; \
+    # - name: Snapfu Recs Sync
+    #   id: snapfu-recs-sync
+    #   shell: bash
+    #   working-directory: repository
+    #   run: |
+    #     if [ ${{ steps.variables.outputs.branch }} = production ]; then \
+    #       snapfu recs sync --secret-key ${{ inputs.secretKey }}; \
+    #     else \
+    #       echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
+    #     fi; \
     
-    - name: Lighthouse Tests
-      id: lighthouse
-      shell: bash
-      working-directory: repository
-      env:
-        LHCI_GITHUB_APP_TOKEN: ${{ inputs.LHCI_GITHUB_APP_TOKEN }}
-      run: |
-        if [ ${{ inputs.skipLighthouse }} = true ]; then \
-          echo 'skipping lighthouse tests'; \
-        elif [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
-          echo 'no pull request ID found'; \
-        elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
-          npm run lighthouse -- --throttling.cpuSlowdownMultiplier=2.2 && \
-          echo "::set-output name=scores::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" &&  \
-          echo "::set-output name=report::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" || exit 1; \
-        else \
-          echo 'lighthouserc.js file not found in repository, skipping lighthouse tests'; \
-        fi
+    # - name: Lighthouse Tests
+    #   id: lighthouse
+    #   shell: bash
+    #   working-directory: repository
+    #   env:
+    #     LHCI_GITHUB_APP_TOKEN: ${{ inputs.LHCI_GITHUB_APP_TOKEN }}
+    #   run: |
+    #     if [ ${{ inputs.skipLighthouse }} = true ]; then \
+    #       echo 'skipping lighthouse tests'; \
+    #     elif [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
+    #       echo 'no pull request ID found'; \
+    #     elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
+    #       npm run lighthouse -- --throttling.cpuSlowdownMultiplier=2.2 && \
+    #       echo "::set-output name=scores::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" &&  \
+    #       echo "::set-output name=report::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" || exit 1; \
+    #     else \
+    #       echo 'lighthouserc.js file not found in repository, skipping lighthouse tests'; \
+    #     fi
     
-    - name: PR Comment
-      id: pr-comment
-      uses: actions/github-script@v5
-      with:
-        github-token: ${{ inputs.GITHUB_BOT_TOKEN || github.token }}
-        script: |
-          ("${{ steps.lighthouse.outputs.scores }}" != '') && ("${{ inputs.LHCI_GITHUB_APP_TOKEN }}" == '') && github.rest.issues.createComment({
-            issue_number: ${{ steps.variables.outputs.pullRequestID || 0 }},
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
-          })
+    # - name: PR Comment
+    #   id: pr-comment
+    #   uses: actions/github-script@v5
+    #   with:
+    #     github-token: ${{ inputs.GITHUB_BOT_TOKEN || github.token }}
+    #     script: |
+    #       ("${{ steps.lighthouse.outputs.scores }}" != '') && ("${{ inputs.LHCI_GITHUB_APP_TOKEN }}" == '') && github.rest.issues.createComment({
+    #         issue_number: ${{ steps.variables.outputs.pullRequestID || 0 }},
+    #         owner: context.repo.owner,
+    #         repo: context.repo.repo,
+    #         body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
+    #       })
           
-    - name: Lighthouse Metrics
-      id: lighthouse-metrics
-      shell: bash
-      run: |
-        if [ ${{ inputs.skipLighthouse }} = false ]; then \
-          npm install;
-          node scripts/metrics/lighthouse.js --siteId ${{ steps.variables.outputs.siteId }} --branch ${{ steps.variables.outputs.branch }} \;
-        else \
-          echo "skipping lighthouse metrics generation due to skipLighthouse flag"; \
-        fi;
-        if [ -f metrics/SnapAction*.json ]; then \
-          aws s3 cp --region us-east-1 ./metrics/SnapAction*.json s3://datawarehouse-stage/team-metrics-import/; \
-        fi;
+    # - name: Lighthouse Metrics
+    #   id: lighthouse-metrics
+    #   shell: bash
+    #   run: |
+    #     if [ ${{ inputs.skipLighthouse }} = false ]; then \
+    #       npm install;
+    #       node scripts/metrics/lighthouse.js --siteId ${{ steps.variables.outputs.siteId }} --branch ${{ steps.variables.outputs.branch }} \;
+    #     else \
+    #       echo "skipping lighthouse metrics generation due to skipLighthouse flag"; \
+    #     fi;
+    #     if [ -f metrics/SnapAction*.json ]; then \
+    #       aws s3 cp --region us-east-1 ./metrics/SnapAction*.json s3://datawarehouse-stage/team-metrics-import/; \
+    #     fi;
         
-    - name: Copy Files to S3
-      id: s3-upload
-      shell: bash
-      working-directory: repository
-      run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then \
-          echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
-        else \
-          aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
-          aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
-        fi;
-        if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
+    # - name: Copy Files to S3
+    #   id: s3-upload
+    #   shell: bash
+    #   working-directory: repository
+    #   run: |
+    #     if [ "${{ github.event_name }}" = "pull_request" ]; then \
+    #       echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
+    #     else \
+    #       aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+    #       aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+    #     fi;
+    #     if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
 
-    - name: Invalidate Files
-      id: invalidation
-      shell: bash
-      working-directory: repository
-      env:
-        AWS_MAX_ATTEMPTS: 9
-      run: |
-        if [ ${{ steps.variables.outputs.branch }} = production ]; then \
-          aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
-        else \
-          aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
-          if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi;
-        fi
+    # - name: Invalidate Files
+    #   id: invalidation
+    #   shell: bash
+    #   working-directory: repository
+    #   env:
+    #     AWS_MAX_ATTEMPTS: 9
+    #   run: |
+    #     if [ ${{ steps.variables.outputs.branch }} = production ]; then \
+    #       aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
+    #     else \
+    #       aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
+    #       if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi;
+    #     fi
 
-    - run: |
-        npx -y jjo \
-          timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
-          type=snap-action \
-          data=$(npx -y jjo \
-            conclusion=${{ github.action_status }} \
-            duration=$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} ) \
-            repository=${{ steps.variables.outputs.repository }} \
-            repositoryOwner=${{ github.repository_owner }} \
-            branch=${{ steps.variables.outputs.branch }} \
-            baseRef=${{ github.base_ref }} \
-            actor=${{ github.actor }} \
-            eventName=${{ github.event_name }} \
-            job=${{ github.job }} \
-            url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
-            runAttempt=${{ github.run_attempt }} \
-            failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || ''}}' \
-          ) \
-        > SnapAction-${{ steps.variables.outputs.repository }}-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
-        cat ./SnapAction*.json && \
-        aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
-      id: metrics
-      shell: bash
-      if: always()
+    # - run: |
+    #     npx -y jjo \
+    #       timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
+    #       type=snap-action \
+    #       data=$(npx -y jjo \
+    #         conclusion=${{ github.action_status }} \
+    #         duration=$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} ) \
+    #         repository=${{ steps.variables.outputs.repository }} \
+    #         repositoryOwner=${{ github.repository_owner }} \
+    #         branch=${{ steps.variables.outputs.branch }} \
+    #         baseRef=${{ github.base_ref }} \
+    #         actor=${{ github.actor }} \
+    #         eventName=${{ github.event_name }} \
+    #         job=${{ github.job }} \
+    #         url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
+    #         runAttempt=${{ github.run_attempt }} \
+    #         failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || ''}}' \
+    #       ) \
+    #     > SnapAction-${{ steps.variables.outputs.repository }}-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
+    #     cat ./SnapAction*.json && \
+    #     aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
+    #   id: metrics
+    #   shell: bash
+    #   if: always()
     
