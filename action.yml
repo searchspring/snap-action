@@ -45,9 +45,8 @@ inputs:
   GITHUB_BOT_TOKEN:
     description: 'Github user PAT token for posting lighthouse results in pull request comments'
     required: false
-  secretsfromJSON:
-    required: false
-  secretstoJSON:
+  secrets:
+    description: 'Secrets encoded via toJSON. Expected to contain WEBSITE_SECRET_KEY or ${siteId}_SECRET_KEY'
     required: false
 
 runs:
@@ -83,8 +82,7 @@ runs:
         echo "Using branch: $branch"
 
         
-        echo "inputs.secretsfromJSON: ${{ inputs.secretsfromJSON }}"
-        echo "inputs.secretstoJSON: ${{ inputs.secretstoJSON }}"
+        echo "inputs.secrets: ${{ inputs.secrets }}"
 
         
         # siteId=`jq -r '.searchspring.siteId' < package.json`
