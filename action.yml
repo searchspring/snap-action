@@ -45,11 +45,9 @@ inputs:
   GITHUB_BOT_TOKEN:
     description: 'Github user PAT token for posting lighthouse results in pull request comments'
     required: false
-  secrets:
+  secretsfromJSON:
     required: false
-  secretsJSON:
-    required: false
-  secretsWildcard:
+  secretstoJSON:
     required: false
 
 runs:
@@ -84,13 +82,11 @@ runs:
         echo "::set-output name=branch::$branch"
         echo "Using branch: $branch"
 
-        echo "inputs.secrets: ${{ inputs.secrets }}"
-        echo "inputs.secrets['VRNTN7_SECRET_KEY']: ${{ inputs.secrets['VRNTN7_SECRET_KEY'] }}"
-        echo "inputs.secrets.VRNTN7_SECRET_KEY: ${{ inputs.secrets.VRNTN7_SECRET_KEY }}"
-        echo "inputs.secretsJSON: ${{ inputs.secretsJSON }}"
-        echo "fromJSON: fromJSON(${{ inputs.secretsJSON }})"
-        echo "inputs.secretsWildcard: ${{ inputs.secretsWildcard }}"
+        
+        echo "inputs.secretsfromJSON: ${{ inputs.secretsfromJSON }}"
+        echo "inputs.secretstoJSON: ${{ inputs.secretstoJSON }}"
 
+        
         # siteId=`jq -r '.searchspring.siteId' < package.json`
         # echo "::set-output name=siteId::$siteId"
         # echo "Using siteId: $siteId"
