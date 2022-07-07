@@ -91,6 +91,15 @@ runs:
 
         echo "inputs.secrets fromJSON VRNTN7: ${{ fromJSON(inputs.secrets)['VRNTN7_SECRET_KEY'] }}"
         echo "inputs.secrets fromJSON VRNTN7: ${{ fromJSON(inputs.secrets).VRNTN7_SECRET_KEY }}"
+
+        testKey='VRNTN7'
+        echo "testKey: $testKey"
+        echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['${testKey}_SECRET_KEY'] }}"
+        echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['$testKey_SECRET_KEY'] }}"
+        echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)[$testKey+'_SECRET_KEY'] }}"
+        echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['$testKey' + '_SECRET_KEY'] }}"
+        echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['${testKey}' + '_SECRET_KEY'] }}"
+        echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['`echo $testKey`_SECRET_KEY'] }}"
         
 
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
@@ -111,12 +120,12 @@ runs:
           echo "::set-output name=siteNames::$siteNames"; \
           echo "Using siteNames: $siteNames"; \
           
-          siteSecretKeys=''
-          echo "$siteIds" | while read id; do
-            siteSecretKeys="${siteSecretKeys},${id}"
-          done;
-          echo "::set-output name=siteSecretKeys::$siteSecretKeys"; \
-          echo "Using siteSecretKeys: $siteSecretKeys"; \
+          # siteSecretKeys=''
+          # echo "$siteIds" | while read id; do
+          #   siteSecretKeys="${siteSecretKeys},${id}"
+          # done;
+          # echo "::set-output name=siteSecretKeys::$siteSecretKeys"; \
+          # echo "Using siteSecretKeys: $siteSecretKeys"; \
 
         else \
           echo "Cannot determine project siteId from package.json"; \
