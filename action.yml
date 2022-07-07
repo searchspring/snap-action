@@ -83,6 +83,8 @@ runs:
 
         
         echo "inputs.secrets: ${{ inputs.secrets }}"
+        echo "Secret key VRNTN7: ${{ inputs.secrets['VRNTN7_SECRET_KEY'] }}"
+        echo "Secret key VRNTN7: ${{ inputs.secrets.VRNTN7_SECRET_KEY }}"
 
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
         echo "::set-output name=siteId_Type::$siteId_Type"; \
