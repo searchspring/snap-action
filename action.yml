@@ -84,10 +84,24 @@ runs:
         
         echo "inputs.secrets: ${{ inputs.secrets }}"
 
+        siteId_Type = `jq -r '.searchspring.siteId | type' < package.json`
         
-        # siteId=`jq -r '.searchspring.siteId' < package.json`
-        # echo "::set-output name=siteId::$siteId"
-        # echo "Using siteId: $siteId"
+        if [ $siteId_Type = 'string' ]; then \
+          echo "siteId is a string"; \
+          siteId=`jq -r '.searchspring.siteId' < package.json`; \
+          echo "::set-output name=siteId::$siteId"; \
+          echo "Using siteId: $siteId"; \
+        elif [ $siteId_Type = 'object' ]; then \
+          echo "siteId is an object"; \
+          siteIds = `jq -r '.searchspring.siteId | keys | join(",")' < package.json`; \ 
+          echo "::set-output name=siteIds::$siteIds"; \
+          echo "Using siteIds: $siteIds";
+        else \
+          echo "Cannot determine project siteId from package.json"; \
+          exit(1); \
+        fi;
+        
+        
 
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
