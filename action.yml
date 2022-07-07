@@ -93,7 +93,7 @@ runs:
           echo "Using siteId: $siteId"; \
         elif [ $siteId_Type = 'object' ]; then \
           echo "siteId is an object"; \
-          siteIds = `jq -r '.searchspring.siteId | keys | join(",")' < package.json`; \ 
+          siteIds=`jq -r '.searchspring.siteId | keys | join(",")' < package.json`; \ 
           echo "::set-output name=siteIds::$siteIds"; \
           echo "Using siteIds: $siteIds";
         else \
