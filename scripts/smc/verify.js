@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const fetch = import('node-fetch');
 const fsp = require('fs').promises;
 const exit = require('process').exit;
 const minimist = require('minimist');
@@ -9,7 +9,7 @@ const METRICS_DIR = './metrics';
 
 
 (async function () {
-    
+
     try {
     
         const argv = minimist(process.argv.slice(2),  { '--': true });
