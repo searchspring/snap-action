@@ -98,7 +98,7 @@ runs:
           echo "Using siteIds: $siteIds";
         else \
           echo "Cannot determine project siteId from package.json"; \
-          exit(1); \
+          exit 1; \
         fi;
         
         
