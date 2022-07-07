@@ -126,31 +126,35 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ ${{ steps.variables.outputs.siteId_Type }} = 'string' ]; then
-          if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
-          -X POST \
-          -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
-          -H "Authorization: ${{ inputs.secretKey }}" \
-          -H "accept: application/json" -H "User-Agent:" \
-          | jq .message \
-          | grep -q 'success'; \
-          then echo 'siteId matches account secretKey!'; \
-          else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
-          fi;
-        elif [ ${{ steps.variables.outputs.siteId_Type }} = 'object' ]; then \
-          echo "${{ steps.variables.outputs.siteIds }}" | while read id; do
-              echo "Validating siteId: $id";
-              uppercaseSiteId=`echo $id | tr '[:lower:]' '[:upper:]'`;
-              # key=`echo "${uppercaseSiteId}_SECRET_KEY"`;
-              key=`echo "VRNTN7_SECRET_KEY"`;
-              echo "key is $key"
-              echo "Secret key VRNTN7: ${{ fromJSON(inputs.secrets)['VRNTN7_SECRET_KEY'] }}"
-              echo "Secret key: ${{ fromJSON(inputs.secrets)['$key'] }}"
-              echo "Secret key: ${{ fromJSON(inputs.secrets)['${key}'] }}"
-              echo "Secret key: ${{ fromJSON(inputs.secrets)['`echo $key`'] }}"
-              echo "Secret key: ${{ fromJSON(inputs.secrets)['$(echo $key)'] }}"
-          done;
-        fi;
+
+        npm install
+        node scripts/smc/verify.js --siteId_Type ${{ steps.variables.outputs.siteId_Type }} --siteId ${{ steps.variables.outputs.siteId }} --siteIds ${{ steps.variables.outputs.siteIds }};
+
+        # if [ ${{ steps.variables.outputs.siteId_Type }} = 'string' ]; then
+        #   if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
+        #   -X POST \
+        #   -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
+        #   -H "Authorization: ${{ inputs.secretKey }}" \
+        #   -H "accept: application/json" -H "User-Agent:" \
+        #   | jq .message \
+        #   | grep -q 'success'; \
+        #   then echo 'siteId matches account secretKey!'; \
+        #   else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
+        #   fi;
+        # elif [ ${{ steps.variables.outputs.siteId_Type }} = 'object' ]; then \
+        #   echo "${{ steps.variables.outputs.siteIds }}" | while read id; do
+        #       echo "Validating siteId: $id";
+        #       uppercaseSiteId=`echo $id | tr '[:lower:]' '[:upper:]'`;
+        #       # key=`echo "${uppercaseSiteId}_SECRET_KEY"`;
+        #       key=`echo "VRNTN7_SECRET_KEY"`;
+        #       echo "key is $key"
+        #       echo "Secret key VRNTN7: ${{ fromJSON(inputs.secrets)['VRNTN7_SECRET_KEY'] }}"
+        #       echo "Secret key: ${{ fromJSON(inputs.secrets)['$key'] }}"
+        #       echo "Secret key: ${{ fromJSON(inputs.secrets)['${key}'] }}"
+        #       echo "Secret key: ${{ fromJSON(inputs.secrets)['`echo $key`'] }}"
+        #       echo "Secret key: ${{ fromJSON(inputs.secrets)['$(echo $key)'] }}"
+        #   done;
+        # fi;
       
 
     # - name: Setup Node
