@@ -103,7 +103,7 @@ runs:
           echo "Using siteId: $siteId"; \
         elif [ $siteId_Type = 'object' ]; then \
           echo "siteId is an object"; \
-          siteIds=`jq -r '.searchspring.siteId | keys[]' < package.json`; \
+          siteIds=`jq -r '.searchspring.siteId | keys | join(",")' < package.json`; \
           echo "::set-output name=siteIds::$siteIds"; \
           echo "Using siteIds: $siteIds"; \
         else \
@@ -128,7 +128,7 @@ runs:
       run: |
 
         npm install
-        node scripts/smc/verify.js --siteId_Type ${{ steps.variables.outputs.siteId_Type }} --siteId ${{ steps.variables.outputs.siteId }} --siteIds ${{ steps.variables.outputs.siteIds }};
+        node scripts/smc/verify.js --siteId_Type ${{ steps.variables.outputs.siteId_Type }} --siteId ${{ steps.variables.outputs.siteId || '' }} --siteIds ${{ steps.variables.outputs.siteIds || '' }};
 
         # if [ ${{ steps.variables.outputs.siteId_Type }} = 'string' ]; then
         #   if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
