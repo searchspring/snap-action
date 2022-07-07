@@ -129,7 +129,12 @@ runs:
           else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
           fi;
         elif [ ${{ steps.variables.outputs.siteId_Type }} = 'object' ]; then \
-          echo "expecting to get here";
+          echo "${{ steps.variables.outputs.siteIds }}" | while read id; do
+              echo "Validating siteId: $id";
+              uppercaseSiteId=`echo $id | tr '[:lower:]' '[:upper:]'`;
+              key=`echo "${uppercaseSiteId}_SECRET_KEY"`;
+              echo "Secret key: ${{ inputs.secrets['$key'] }}"
+          done;
         fi;
       
 
