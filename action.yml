@@ -106,6 +106,18 @@ runs:
           siteIds=`jq -r '.searchspring.siteId | keys | join(",")' < package.json`; \
           echo "::set-output name=siteIds::$siteIds"; \
           echo "Using siteIds: $siteIds"; \
+
+          siteNames=`jq -r '[.searchspring.siteId[].name] | join(",")' < package.json`; \
+          echo "::set-output name=siteNames::$siteNames"; \
+          echo "Using siteNames: $siteNames"; \
+          
+          siteSecretKeys=''
+          echo "$siteIds" | while read id; do
+            siteSecretKeys="${siteSecretKeys},${id}"
+          done;
+          echo "::set-output name=siteSecretKeys::$siteSecretKeys"; \
+          echo "Using siteSecretKeys: $siteSecretKeys"; \
+
         else \
           echo "Cannot determine project siteId from package.json"; \
           exit 1; \
@@ -128,7 +140,7 @@ runs:
       run: |
 
         npm install
-        node scripts/smc/verify.js --siteId_Type ${{ steps.variables.outputs.siteId_Type }} --siteId ${{ steps.variables.outputs.siteId || '' }} --siteIds ${{ steps.variables.outputs.siteIds || '' }} --testsecrets "${{ inputs.secrets }}";
+        node scripts/smc/verify.js --siteId_Type "${{ steps.variables.outputs.siteId_Type }}" --siteId "${{ steps.variables.outputs.siteId }}" --siteIds "${{ steps.variables.outputs.siteIds }}" --siteNames "${{ steps.variables.outputs.siteNames }}" --siteSecretKeys "${{ steps.variables.outputs.siteSecretKeys }}";
 
         # if [ ${{ steps.variables.outputs.siteId_Type }} = 'string' ]; then
         #   if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \

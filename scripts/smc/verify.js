@@ -14,26 +14,14 @@ const METRICS_DIR = './metrics';
     try {
     
         const argv = minimist(process.argv.slice(2),  { '--': true });
-        const { siteId_Type, siteId, siteIds, testsecrets } = argv;
+        const { siteId_Type, siteId, siteIds, siteNames, siteSecretKeys } = argv;
 
         console.log("siteId_Type", siteId_Type)
         console.log("siteId", siteId)
         console.log("siteIds", siteIds)
-        console.log("testsecrets", testsecrets)
-        console.log("typeof testsecrets", typeof testsecrets)
-        console.log(testsecrets)
-        console.log(`testsecrets${testsecrets}testsecrets`)
-
-        // const secrets = core.getInput('secrets');
-        // console.log("secrets", secrets)
-
-        let secrets;
-        try {
-            secrets = JSON.parse(testsecrets);
-        } catch(e) {
-            console.log("could not parse secrets");
-        }
-
+        console.log("siteNames", siteNames)
+        console.log("siteSecretKeys", siteSecretKeys)
+        
         
 
         if(siteId_Type == 'string') {
@@ -43,7 +31,7 @@ const METRICS_DIR = './metrics';
             // multi site
             siteIds.split(',').forEach(id => {
                 console.log("id: ", id);
-                console.log("secret is", secrets[`${id.toUpperCase()}_SECRET_KEY`])
+                // console.log("secret is", secrets[`${id.toUpperCase()}_SECRET_KEY`])
                 
                 
             });
