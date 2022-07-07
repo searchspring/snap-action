@@ -84,7 +84,7 @@ runs:
         
         echo "inputs.secrets: ${{ inputs.secrets }}"
 
-        siteId_Type = `jq -r '.searchspring.siteId | type' < package.json`
+        siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
         
         if [ $siteId_Type = 'string' ]; then \
           echo "siteId is a string"; \
