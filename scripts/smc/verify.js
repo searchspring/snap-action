@@ -32,6 +32,8 @@ const METRICS_DIR = './metrics';
             // multi site
             siteIds.split(',').forEach(id => {
                 console.log("id: ", id);
+                console.log("secret is", testsecrets[`${id.toUpperCase()}_SECRET_KEY`])
+                
                 
             });
         }
