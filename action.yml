@@ -128,7 +128,7 @@ runs:
       run: |
 
         npm install
-        node scripts/smc/verify.js --siteId_Type ${{ steps.variables.outputs.siteId_Type }} --siteId ${{ steps.variables.outputs.siteId || '' }} --siteIds ${{ steps.variables.outputs.siteIds || '' }};
+        node scripts/smc/verify.js --testsecrets ${{ input.secrets }} --siteId_Type ${{ steps.variables.outputs.siteId_Type }} --siteId ${{ steps.variables.outputs.siteId || '' }} --siteIds ${{ steps.variables.outputs.siteIds || '' }};
 
         # if [ ${{ steps.variables.outputs.siteId_Type }} = 'string' ]; then
         #   if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \

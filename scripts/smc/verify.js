@@ -4,23 +4,37 @@ const exit = require('process').exit;
 const minimist = require('minimist');
 const github = require('@actions/github');
 
+const core = require('@actions/core');
+
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics';
 
 
 (async function () {
-
     try {
     
         const argv = minimist(process.argv.slice(2),  { '--': true });
-        const { siteId_Type, siteId, siteIds } = argv;
+        const { siteId_Type, siteId, siteIds, testsecrets } = argv;
 
         console.log("siteId_Type", siteId_Type)
         console.log("siteId", siteId)
         console.log("siteIds", siteIds)
-        console.log("siteId_Type", siteId_Type)
-        
-        console.log("typeof fetch", typeof fetch)
+        console.log("testsecrets", testsecrets)
+
+        const secrets = core.getInput('secrets');
+        console.log("secrets", secrets)
+
+
+        if(siteId_Type == 'string') {
+            // single site
+            
+        } else if (siteId_Type == 'object') {
+            // multi site
+            siteIds.split(',').forEach(id => {
+                console.log("id: ", id);
+                
+            });
+        }
 
         const body = { 
             name: ''
