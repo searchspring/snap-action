@@ -96,7 +96,7 @@ runs:
         echo "testKey: $testKey"
         echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['${testKey}_SECRET_KEY'] }}"
         echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['$testKey_SECRET_KEY'] }}"
-        echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)[$testKey+'_SECRET_KEY'] }}"
+        # echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)[$testKey+'_SECRET_KEY'] }}"
         echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['$testKey' + '_SECRET_KEY'] }}"
         echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['${testKey}' + '_SECRET_KEY'] }}"
         echo "inputs.secrets fromJSON testKey: ${{ fromJSON(inputs.secrets)['`echo $testKey`_SECRET_KEY'] }}"
