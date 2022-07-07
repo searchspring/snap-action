@@ -146,6 +146,9 @@ runs:
               echo "key is $key"
               echo "Secret key VRNTN7: ${{ fromJSON(inputs.secrets)['VRNTN7_SECRET_KEY'] }}"
               echo "Secret key: ${{ fromJSON(inputs.secrets)['$key'] }}"
+              echo "Secret key: ${{ fromJSON(inputs.secrets)['${key}'] }}"
+              echo "Secret key: ${{ fromJSON(inputs.secrets)['`echo $key`'] }}"
+              echo "Secret key: ${{ fromJSON(inputs.secrets)['$(echo $key)'] }}"
           done;
         fi;
       
