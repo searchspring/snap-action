@@ -21,15 +21,19 @@ const METRICS_DIR = './metrics';
         console.log("siteIds", siteIds)
         console.log("testsecrets", testsecrets)
         console.log("typeof testsecrets", typeof testsecrets)
+        console.log(testsecrets)
+        console.log(`testsecrets${testsecrets}testsecrets`)
 
         // const secrets = core.getInput('secrets');
         // console.log("secrets", secrets)
 
+        let secrets;
         try {
-            const secrets = JSON.parse(testsecrets);
+            secrets = JSON.parse(testsecrets);
         } catch(e) {
             console.log("could not parse secrets");
         }
+
         
 
         if(siteId_Type == 'string') {
