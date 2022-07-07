@@ -95,7 +95,7 @@ runs:
           echo "siteId is an object"; \
           siteIds=`jq -r '.searchspring.siteId | keys | join(",")' < package.json`; \ 
           echo "::set-output name=siteIds::$siteIds"; \
-          echo "Using siteIds: $siteIds";
+          echo "Using siteIds: $siteIds"; \
         else \
           echo "Cannot determine project siteId from package.json"; \
           exit 1; \
