@@ -20,10 +20,17 @@ const METRICS_DIR = './metrics';
         console.log("siteId", siteId)
         console.log("siteIds", siteIds)
         console.log("testsecrets", testsecrets)
+        console.log("typeof testsecrets", typeof testsecrets)
 
-        const secrets = core.getInput('secrets');
-        console.log("secrets", secrets)
+        // const secrets = core.getInput('secrets');
+        // console.log("secrets", secrets)
 
+        try {
+            const secrets = JSON.parse(testsecrets);
+        } catch(e) {
+            console.log("could not parse secrets");
+        }
+        
 
         if(siteId_Type == 'string') {
             // single site
@@ -32,7 +39,7 @@ const METRICS_DIR = './metrics';
             // multi site
             siteIds.split(',').forEach(id => {
                 console.log("id: ", id);
-                console.log("secret is", testsecrets[`${id.toUpperCase()}_SECRET_KEY`])
+                console.log("secret is", secrets[`${id.toUpperCase()}_SECRET_KEY`])
                 
                 
             });
