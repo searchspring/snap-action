@@ -92,14 +92,21 @@ runs:
           echo "::set-output name=siteId::$siteId"; \
           echo "Using siteId: $siteId"; \
         elif [ $siteId_Type = 'object' ]; then \
+          echo "got here 1";
           echo "siteId is an object"; \
+          echo "got here 2";
           siteIds=`jq -r '.searchspring.siteId | keys | join(",")' < package.json`; \ 
+          echo "got here 3";
           echo "::set-output name=siteIds::$siteIds"; \
+          echo "got here 4";
           echo "Using siteIds: $siteIds"; \
+          echo "got here 5";
         else \
           echo "Cannot determine project siteId from package.json"; \
           exit 1; \
         fi;
+
+        echo "got here end";
         
         
 
