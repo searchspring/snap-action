@@ -88,6 +88,9 @@ runs:
 
         echo "inputs.secrets fromJSON: ${{ fromJSON(inputs.secrets) }}"
         echo "inputs.secrets toJSON: ${{ toJSON(inputs.secrets) }}"
+
+        echo "inputs.secrets fromJSON VRNTN7: ${{ fromJSON(inputs.secrets)['VRNTN7_SECRET_KEY'] }}"
+        echo "inputs.secrets fromJSON VRNTN7: ${{ fromJSON(inputs.secrets).VRNTN7_SECRET_KEY }}"
         
 
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
