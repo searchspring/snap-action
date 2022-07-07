@@ -124,7 +124,7 @@ runs:
     - name: Authenticate siteId and secretKey
       id: authenticate
       shell: bash
-      working-directory: repository
+      # working-directory: repository
       run: |
 
         npm install
