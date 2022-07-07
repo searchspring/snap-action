@@ -85,30 +85,22 @@ runs:
         echo "inputs.secrets: ${{ inputs.secrets }}"
 
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
-        
+        echo "::set-output name=siteId_Type::$siteId_Type"; \
+
         if [ $siteId_Type = 'string' ]; then \
           echo "siteId is a string"; \
           siteId=`jq -r '.searchspring.siteId' < package.json`; \
           echo "::set-output name=siteId::$siteId"; \
           echo "Using siteId: $siteId"; \
         elif [ $siteId_Type = 'object' ]; then \
-          echo "got here 1"; \
           echo "siteId is an object"; \
-          echo "got here 2"; \
-          siteIds=`jq -r '.searchspring.siteId | keys | join(",")' < package.json`; \
-          echo "got here 3"; \
+          siteIds=`jq -r '.searchspring.siteId | keys[]' < package.json`; \
           echo "::set-output name=siteIds::$siteIds"; \
-          echo "got here 4"; \
           echo "Using siteIds: $siteIds"; \
-          echo "got here 5"; \
         else \
           echo "Cannot determine project siteId from package.json"; \
           exit 1; \
         fi;
-
-        echo "got here end";
-        
-        
 
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
@@ -120,21 +112,26 @@ runs:
         echo "::set-output name=startTime::$startTime"
         echo "Using startTime: $startTime"
     
-    # - name: Authenticate siteId and secretKey
-    #   id: authenticate
-    #   shell: bash
-    #   working-directory: repository
-    #   run: |
-    #     if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
-    #     -X POST \
-    #     -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
-    #     -H "Authorization: ${{ inputs.secretKey }}" \
-    #     -H "accept: application/json" -H "User-Agent:" \
-    #     | jq .message \
-    #     | grep -q 'success'; \
-    #     then echo 'siteId matches account secretKey!'; \
-    #     else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
-    #     fi;
+    - name: Authenticate siteId and secretKey
+      id: authenticate
+      shell: bash
+      working-directory: repository
+      run: |
+        if [ ${{ steps.variables.outputs.siteId_Type }} = 'string' ]; then
+          if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
+          -X POST \
+          -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
+          -H "Authorization: ${{ inputs.secretKey }}" \
+          -H "accept: application/json" -H "User-Agent:" \
+          | jq .message \
+          | grep -q 'success'; \
+          then echo 'siteId matches account secretKey!'; \
+          else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
+          fi;
+        elif [ ${{ steps.variables.outputs.siteId_Type }} = 'object' ]; then \
+          echo "expecting to get here";
+        fi;
+      
 
     # - name: Setup Node
     #   id: setup-node
