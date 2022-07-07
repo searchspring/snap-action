@@ -141,10 +141,11 @@ runs:
           echo "${{ steps.variables.outputs.siteIds }}" | while read id; do
               echo "Validating siteId: $id";
               uppercaseSiteId=`echo $id | tr '[:lower:]' '[:upper:]'`;
-              key=`echo "${uppercaseSiteId}_SECRET_KEY"`;
+              # key=`echo "${uppercaseSiteId}_SECRET_KEY"`;
+              key=`echo "VRNTN7_SECRET_KEY"`;
               echo "key is $key"
-              echo "Secret key VRNTN7: ${{ inputs.secrets['VRNTN7_SECRET_KEY'] }}"
-              echo "Secret key: ${{ inputs.secrets['$key'] }}"
+              echo "Secret key VRNTN7: ${{ fromJSON(inputs.secrets)['VRNTN7_SECRET_KEY'] }}"
+              echo "Secret key: ${{ fromJSON(inputs.secrets)['$key'] }}"
           done;
         fi;
       
