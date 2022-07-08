@@ -38,7 +38,6 @@ const verify = (siteId, name, secretKey) => {
     try {
     
         const argv = minimist(process.argv.slice(2),  { '--': true });
-        // const { siteId_Type, siteId, siteIds, siteNames, siteSecretKeys, secretKey, secrets } = argv;
 
 
         console.log("siteId_Type", argv.siteId_Type)
@@ -46,7 +45,6 @@ const verify = (siteId, name, secretKey) => {
         console.log("siteIds", argv.siteIds)
         console.log("siteNames", argv.siteNames)
         console.log("secretKey", argv.secretKey)
-        console.log("siteSecretKeys", argv.siteSecretKeys)
         console.log("secrets", argv.secrets)
 
         let secretsData;
@@ -65,11 +63,19 @@ const verify = (siteId, name, secretKey) => {
         
         
         
-
-        if(argv.siteId_Type == 'string') {
+        let authFailed = false;
+        if(argv.siteId_Type === 'string') {
             // single site
+            const siteId = argv.siteId;
+            const name = argv.repository;
+            const secretKey = argv.secretKey;
+
+            const success = await verify(siteId, name, secretKey);
+            if(!success) {
+                authFailed = true;
+            }
             
-        } else if (argv.siteId_Type == 'object') {
+        } else if (argv.siteId_Type === 'object') {
             // multi site
             const siteIds = argv.siteIds.split(',').filter(a => a);
             const siteNames = argv.siteNames.split(',').filter(a => a);
@@ -79,9 +85,10 @@ const verify = (siteId, name, secretKey) => {
                 exit(1);
             }
 
-            let authFailed = false;
+            
             for (let index = 0; index < siteIds.length; index++) {
                 const siteId = siteIds[index];
+                const name = siteNames[index];
                 const secretKey = secretsData[`WEBSITE_SECRET_KEY_${siteId.toUpperCase()}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId.toLowerCase()}`];
                 if(!secretKey) {
                     console.log(`
@@ -109,18 +116,21 @@ jobs:
                     exit(1);
                 }
 
-                const success = await verify(siteId, siteNames[index], secretKey)
+                const success = await verify(siteId, name, secretKey);
                 if(!success) {
                     authFailed = true;
                 }
             }
-
-            if(authFailed) {
-                exit(1);
-            }
-
-            exit(0);
+        } else {
+            console.log("Could not determine siteId in project's package.json")
+            exit(1);
         }
+
+        if(authFailed) {
+            exit(1);
+        }
+
+        exit(0);
 
     } catch (err) {
         console.error('unable to process verify file');

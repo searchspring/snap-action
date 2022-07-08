@@ -80,23 +80,10 @@ runs:
         fi;
         echo "::set-output name=branch::$branch"
         echo "Using branch: $branch"
-
-        
-        echo "inputs.secrets: ${{ inputs.secrets }}"
-        echo "Secret key VRNTN7: ${{ inputs.secrets['WEBSITE_SECRET_KEY_VRNTN7'] }}"
-        echo "Secret key VRNTN7: ${{ inputs.secrets.WEBSITE_SECRET_KEY_VRNTN7 }}"
-
-        echo "inputs.secrets fromJSON: ${{ fromJSON(inputs.secrets) }}"
-        echo "inputs.secrets toJSON: ${{ toJSON(inputs.secrets) }}"
-
         
         secrets=`echo "${{ toJSON(inputs.secrets) }}"`;
         echo "::set-output name=secrets::$secrets";
         echo "Using secrets: $secrets";
-
-        echo "inputs.secrets fromJSON VRNTN7: ${{ fromJSON(inputs.secrets)['WEBSITE_SECRET_KEY_VRNTN7'] }}"
-        echo "inputs.secrets fromJSON VRNTN7: ${{ fromJSON(inputs.secrets).WEBSITE_SECRET_KEY_VRNTN7 }}"
-        
 
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
         echo "::set-output name=siteId_Type::$siteId_Type"; \
@@ -115,14 +102,6 @@ runs:
           siteNames=`jq -r '[.searchspring.siteId[].name] | join(",")' < package.json`; \
           echo "::set-output name=siteNames::$siteNames"; \
           echo "Using siteNames: $siteNames"; \
-          
-          # siteSecretKeys=''
-          # echo "$siteIds" | while read id; do
-          #   siteSecretKeys="${siteSecretKeys},${id}"
-          # done;
-          # echo "::set-output name=siteSecretKeys::$siteSecretKeys"; \
-          # echo "Using siteSecretKeys: $siteSecretKeys"; \
-
         else \
           echo "Cannot determine project siteId from package.json"; \
           exit 1; \
@@ -141,37 +120,16 @@ runs:
     - name: Authenticate siteId and secretKey
       id: authenticate
       shell: bash
-      # working-directory: repository
       run: |
-
         npm install
-        node scripts/smc/verify.js --siteId_Type "${{ steps.variables.outputs.siteId_Type }}" --siteId "${{ steps.variables.outputs.siteId }}" --siteIds "${{ steps.variables.outputs.siteIds }}" --siteNames "${{ steps.variables.outputs.siteNames }}" --siteSecretKeys "${{ steps.variables.outputs.siteSecretKeys }}" --secretKey "${{ inputs.secretKey }}" --secrets '${{ steps.variables.outputs.secrets }}';
-
-        # if [ ${{ steps.variables.outputs.siteId_Type }} = 'string' ]; then
-        #   if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
-        #   -X POST \
-        #   -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
-        #   -H "Authorization: ${{ inputs.secretKey }}" \
-        #   -H "accept: application/json" -H "User-Agent:" \
-        #   | jq .message \
-        #   | grep -q 'success'; \
-        #   then echo 'siteId matches account secretKey!'; \
-        #   else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
-        #   fi;
-        # elif [ ${{ steps.variables.outputs.siteId_Type }} = 'object' ]; then \
-        #   echo "${{ steps.variables.outputs.siteIds }}" | while read id; do
-        #       echo "Validating siteId: $id";
-        #       uppercaseSiteId=`echo $id | tr '[:lower:]' '[:upper:]'`;
-        #       # key=`echo "WEBSITE_SECRET_KEY_${uppercaseSiteId}"`;
-        #       key=`echo "WEBSITE_SECRET_KEY_VRNTN7"`;
-        #       echo "key is $key"
-        #       echo "Secret key VRNTN7: ${{ fromJSON(inputs.secrets)['WEBSITE_SECRET_KEY_VRNTN7'] }}"
-        #       echo "Secret key: ${{ fromJSON(inputs.secrets)['$key'] }}"
-        #       echo "Secret key: ${{ fromJSON(inputs.secrets)['${key}'] }}"
-        #       echo "Secret key: ${{ fromJSON(inputs.secrets)['`echo $key`'] }}"
-        #       echo "Secret key: ${{ fromJSON(inputs.secrets)['$(echo $key)'] }}"
-        #   done;
-        # fi;
+        node scripts/smc/verify.js \
+          --siteId_Type "${{ steps.variables.outputs.siteId_Type }}" \
+          --siteId "${{ steps.variables.outputs.siteId }}" \
+          --repository "${{ steps.variables.outputs.repository }}" \
+          --siteIds "${{ steps.variables.outputs.siteIds }}" \
+          --siteNames "${{ steps.variables.outputs.siteNames }}" \
+          --secretKey "${{ inputs.secretKey }}" \
+          --secrets '${{ steps.variables.outputs.secrets }}';
       
 
     # - name: Setup Node
