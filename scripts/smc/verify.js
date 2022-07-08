@@ -14,13 +14,18 @@ const METRICS_DIR = './metrics';
     try {
     
         const argv = minimist(process.argv.slice(2),  { '--': true });
-        const { siteId_Type, siteId, siteIds, siteNames, siteSecretKeys } = argv;
+        const { siteId_Type, siteId, siteIds, siteNames, siteSecretKeys, secretKey, secrets, secretstoJSON, secretsfromJSON } = argv;
 
         console.log("siteId_Type", siteId_Type)
         console.log("siteId", siteId)
         console.log("siteIds", siteIds)
         console.log("siteNames", siteNames)
+        console.log("secretKey", secretKey)
         console.log("siteSecretKeys", siteSecretKeys)
+        console.log("secrets", secrets)
+        console.log("secretstoJSON", secretstoJSON)
+        console.log("secretsfromJSON", secretsfromJSON)
+        
         
         
 
@@ -40,7 +45,7 @@ const METRICS_DIR = './metrics';
         const body = { 
             name: ''
         };
-        const secretKey = '';
+        
 
         // const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
         //     method: 'post',
