@@ -29,6 +29,7 @@ const METRICS_DIR = './metrics';
             console.log("secretsData['WEBSITE_SECRET_KEY']", secretsData['WEBSITE_SECRET_KEY'])
         } catch(e) {
             console.log("Could not parse secrets");
+            console.log(e);
         }
 
         

@@ -151,7 +151,7 @@ runs:
       run: |
 
         npm install
-        node scripts/smc/verify.js --siteId_Type "${{ steps.variables.outputs.siteId_Type }}" --siteId "${{ steps.variables.outputs.siteId }}" --siteIds "${{ steps.variables.outputs.siteIds }}" --siteNames "${{ steps.variables.outputs.siteNames }}" --siteSecretKeys "${{ steps.variables.outputs.siteSecretKeys }}" --secretKey "${{ inputs.secretKey }}" --secrets "${{ steps.variables.outputs.secrets }}";
+        node scripts/smc/verify.js --siteId_Type "${{ steps.variables.outputs.siteId_Type }}" --siteId "${{ steps.variables.outputs.siteId }}" --siteIds "${{ steps.variables.outputs.siteIds }}" --siteNames "${{ steps.variables.outputs.siteNames }}" --siteSecretKeys "${{ steps.variables.outputs.siteSecretKeys }}" --secretKey "${{ inputs.secretKey }}" --secrets '${{ steps.variables.outputs.secrets }}';
 
         # if [ ${{ steps.variables.outputs.siteId_Type }} = 'string' ]; then
         #   if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
