@@ -268,14 +268,12 @@ runs:
             aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
             aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
           elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then \
-            echo "${{ steps.variables.outputs.siteIds }}" | \
-              tr , '\n' | \
-                while read siteId \
-                  do
-                    echo "Copying files to S3 for siteId $siteId"
-                    aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
-                    aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
-                  done;
+            echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
+              do
+                echo "Copying files to S3 for siteId $siteId"
+                aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
+                aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
+              done;
           fi;
 
         fi;
