@@ -56,11 +56,12 @@ const METRICS_DIR = './metrics';
             }
 
             siteIds.forEach(id => {
-                if(!secretsData[`${id}_SECRET_KEY`]) {
-                    console.log(`Could not find github secret '${id}_SECRET_KEY'.
-                    It can be added by running 'snapfu secrets add' in the project's directory locally, 
-                    or added manual in the project's repository secrets. 
-                    The value can be obtained in the Searchspring Management Console.`);
+                const key = secretsData[`${id.toUpperCase()}_SECRET_KEY`] || secretsData[`${id}_SECRET_KEY`];
+                if(!key) {
+                    console.log(`Could not find github secret '${id.toUpperCase()}_SECRET_KEY'.
+It can be added by running 'snapfu secrets add' in the project's directory locally, 
+or added manual in the project's repository secrets. 
+The value can be obtained in the Searchspring Management Console.`);
                     exit(1);
                 }
             });
