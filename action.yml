@@ -115,8 +115,16 @@ runs:
         echo "Using repository: $repository"
         startTime=`date -u +%s`
         echo "::set-output name=startTime::$startTime"
-        echo "Using startTime: $startTime"
-    
+        echo "Using startTime: $startTime"      
+
+    - name: Setup Node
+      id: setup-node
+      uses: actions/setup-node@v2
+      with:
+        node-version: 16
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@searchspring'
+
     - name: Authenticate siteId and secretKey
       id: authenticate
       shell: bash
@@ -130,15 +138,6 @@ runs:
           --siteNames "${{ steps.variables.outputs.siteNames }}" \
           --secretKey "${{ inputs.secretKey }}" \
           --secrets '${{ steps.variables.outputs.secrets }}';
-      
-
-    # - name: Setup Node
-    #   id: setup-node
-    #   uses: actions/setup-node@v2
-    #   with:
-    #     node-version: 16
-    #     registry-url: 'https://npm.pkg.github.com'
-    #     scope: '@searchspring'
 
     # - name: Cache node_modules
     #   id: cache
@@ -162,7 +161,6 @@ runs:
     #     NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
     #   run: |
     #     npm install
-    #     npm install -g snapfu
 
     # - name: Build Bundle
     #   id: build
@@ -197,16 +195,26 @@ runs:
     #       echo 'skipping tests for pull_request triggers'; \
     #     fi;
     
-    # - name: Snapfu Recs Sync
-    #   id: snapfu-recs-sync
-    #   shell: bash
-    #   working-directory: repository
-    #   run: |
-    #     if [ ${{ steps.variables.outputs.branch }} = production ]; then \
-    #       snapfu recs sync --secret-key ${{ inputs.secretKey }}; \
-    #     else \
-    #       echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
-    #     fi; \
+    - name: Snapfu Recs Sync
+      id: snapfu-recs-sync
+      shell: bash
+      working-directory: repository
+      run: |
+        npm install -g "https://github.com/searchspring/snapfu.git#recs-multi-site"
+
+        snapfu recs sync \
+          --secret-key "${{ inputs.secretKey }}" \
+          --secrets '${{ steps.variables.outputs.secrets }}';
+
+      # if [ ${{ steps.variables.outputs.branch }} = production ]; then \
+      #   npm install -g "https://github.com/searchspring/snapfu.git#recs-multi-site"
+
+      #   snapfu recs sync \
+      #     --secret-key "${{ inputs.secretKey }}" \
+      #     --secrets '${{ steps.variables.outputs.secrets }}';
+      # else \
+      #   echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
+      # fi; \
     
     # - name: Lighthouse Tests
     #   id: lighthouse
