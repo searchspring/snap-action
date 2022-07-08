@@ -56,9 +56,9 @@ const METRICS_DIR = './metrics';
             }
 
             siteIds.forEach(id => {
-                const key = secretsData[`${id.toUpperCase()}_SECRET_KEY`] || secretsData[`${id}_SECRET_KEY`];
+                const key = secretsData[`WEBSITE_SECRET_KEY_${id.toUpperCase()}`] || secretsData[`WEBSITE_SECRET_KEY_${id}`] || secretsData[`WEBSITE_SECRET_KEY_${id.toLowerCase()}`];
                 if(!key) {
-                    console.log(`Could not find github secret '${id.toUpperCase()}_SECRET_KEY'.
+                    console.log(`Could not find github secret 'WEBSITE_SECRET_KEY_${id.toUpperCase()}'.
 It can be added by running 'snapfu secrets add' in the project's directory locally, 
 or added manual in the project's repository secrets. 
 The value can be obtained in the Searchspring Management Console.`);
