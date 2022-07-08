@@ -25,7 +25,13 @@ const METRICS_DIR = './metrics';
         console.log("secrets", secrets)
 
         try {
-            const secretsData = JSON.parse(secrets.replaceAll('n', ''))
+            const secrets = `{n "SNAPFU_AWS_BUCKET": "***",n "VRNTN7_SECRET_KEY": "***",n "WEBSITE_SECRET_KEY": "***",n "SNAPFU_AWS_KEY_ID": "***",n "SNAPFU_AWS_SECRET_ACCESS_KEY": "***",n "SNAPFU_AWS_DISTRIBUTION_ID": "***",n "MACHINE_TOKEN": "***",n "PACKAGE_TOKEN": "***",n "github_token": "***"n}`;
+            const jsonSerializingCharacter = secrets.slice(1,2);
+            console.log("jsonSerializingCharacter", jsonSerializingCharacter);
+
+            const secretsUnserialized = secrets.split(`${jsonSerializingCharacter} "`).join('"').split(`"${jsonSerializingCharacter}}`).join('"}');
+            const secretsData = JSON.parse(secretsUnserialized)
+            
             console.log("secretsData['WEBSITE_SECRET_KEY']", secretsData['WEBSITE_SECRET_KEY'])
         } catch(e) {
             console.log("Could not parse secrets");
