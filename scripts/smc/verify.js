@@ -27,26 +27,13 @@ const METRICS_DIR = './metrics';
         console.log("secretsfromJSON", `${secretsfromJSON}`)
 
         try {
-            const x = JSON.parse(secretstoJSON);
-            console.log("x", x)
-            console.log("x", `${x}`)
+            const secretsData = JSON.parse(secrets.replaceAll('n', ''))
+            console.log("secretsData['WEBSITE_SECRET_KEY']", secretsData['WEBSITE_SECRET_KEY'])
         } catch(e) {
-            console.log(e);
+            console.log("Could not parse secrets");
         }
 
-        try {
-            const y = JSON.parse(secretsfromJSON);
-            console.log("y", y)
-            console.log("y", `${y}`)
-        } catch(e) {
-            console.log(e);
-        }
-
-        try {
-            console.log("secretsfromJSON['WEBSITE_SECRET_KEY']", secretsfromJSON['WEBSITE_SECRET_KEY'])
-        } catch(e) {
-            console.log(e);
-        }
+        
         
         
         
