@@ -10,6 +10,29 @@ const { rejects } = require('assert');
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics';
 
+
+const verify = (siteId, name, secretKey) => {
+    return new Promise(async (resolve, reject) => {
+        const body = { name };
+        const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'accept': 'application/json',
+                'User-Agent': '',
+                'Authorization': `${secretKey}`
+            }
+        });
+        const data = await response.json();
+        if(data.message === 'success') {
+            console.log(`Authentication successful for siteId ${siteId}`)
+            resolve(true)
+        }
+        console.log(`Authentication failed for siteId ${siteId}`)
+        resolve(false)
+    });
+}
+
 (async function () {
     try {
     
@@ -119,26 +142,3 @@ jobs:
         exit(1);
     }
 })();
-
-const verify = (siteId, name, secretKey) => {
-    return new Promise(async (resolve, reject) => {
-        const body = { name };
-        const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
-            method: 'POST',
-            body: JSON.stringify(body),
-            headers: {
-                'accept': 'application/json',
-                'User-Agent': '',
-                'Authorization': `${secretKey}`
-            }
-        });
-        const data = await response.json();
-        if(data.message === 'success') {
-            console.log(`Authentication successful for siteId ${siteId}`)
-            resolve(true)
-        }
-        console.log(`Authentication failed for siteId ${siteId}`)
-        resolve(false)
-    });
-    
-}
