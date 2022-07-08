@@ -121,7 +121,7 @@ jobs:
 })();
 
 const verify = (siteId, name, secretKey) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const body = { name };
         const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
             method: 'POST',
