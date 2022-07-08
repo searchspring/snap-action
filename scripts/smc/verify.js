@@ -27,9 +27,10 @@ const verify = (siteId, name, secretKey) => {
         if(data.message === 'success') {
             console.log(`Authentication successful for siteId ${siteId}`)
             resolve(true)
+        } else {
+            console.log(`Authentication failed for siteId ${siteId}`)
+            resolve(false)
         }
-        console.log(`Authentication failed for siteId ${siteId}`)
-        resolve(false)
     });
 }
 
@@ -78,6 +79,7 @@ const verify = (siteId, name, secretKey) => {
                 exit(1);
             }
 
+            let authFailed = false;
             for (let index = 0; index < siteIds.length; index++) {
                 const siteId = siteIds[index];
                 const secretKey = secretsData[`WEBSITE_SECRET_KEY_${siteId.toUpperCase()}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId.toLowerCase()}`];
@@ -109,29 +111,13 @@ jobs:
 
                 const success = await verify(siteId, siteNames[index], secretKey)
                 if(!success) {
-                    exit(1);
+                    authFailed = true;
                 }
-                // const name = siteNames[index];
-                // const body = { name };
-                // const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
-                //     method: 'post',
-                //     body: JSON.stringify(body),
-                //     headers: {
-                //         // 'Content-Type': 'application/json',
-                //         'accept': 'application/json',
-                //         'User-Agent': '',
-                //         'Authorization': `${secretKey}`
-                //     }
-                // });
-                // const data = await response.json();
-                // if(data.message === 'success') {
-                //     console.log(`Authentication successful for siteId ${siteId}`)
-                // } else {
-                //     console.log(`Authentication failed for siteId ${siteId}`)
-                //     authFailed = true;
-                // }
             }
 
+            if(authFailed) {
+                exit(1);
+            }
 
             exit(0);
         }
