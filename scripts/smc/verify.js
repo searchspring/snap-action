@@ -5,10 +5,10 @@ const minimist = require('minimist');
 const github = require('@actions/github');
 
 const core = require('@actions/core');
+const { rejects } = require('assert');
 
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics';
-
 
 (async function () {
     try {
@@ -84,29 +84,35 @@ jobs:
                     exit(1);
                 }
 
-                const name = siteNames[index];
-                const body = { name };
-                const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
-                    method: 'post',
-                    body: JSON.stringify(body),
-                    headers: {
-                        // 'Content-Type': 'application/json',
-                        'accept': 'application/json',
-                        'User-Agent': '',
-                        'Authorization': `${secretKey}`
-                    }
-                });
-                const data = await response.json();
-                console.log("data", data);
+                const success = await verify(siteId, siteNames[index], secretKey)
+                if(!success) {
+                    exit(1);
+                }
+                // const name = siteNames[index];
+                // const body = { name };
+                // const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
+                //     method: 'post',
+                //     body: JSON.stringify(body),
+                //     headers: {
+                //         // 'Content-Type': 'application/json',
+                //         'accept': 'application/json',
+                //         'User-Agent': '',
+                //         'Authorization': `${secretKey}`
+                //     }
+                // });
+                // const data = await response.json();
+                // if(data.message === 'success') {
+                //     console.log(`Authentication successful for siteId ${siteId}`)
+                // } else {
+                //     console.log(`Authentication failed for siteId ${siteId}`)
+                //     authFailed = true;
+                // }
             }
-            
+
+
+            exit(0);
         }
 
-        
-        
-
-        
-        
     } catch (err) {
         console.error('unable to process verify file');
         console.error(err);
@@ -114,3 +120,25 @@ jobs:
     }
 })();
 
+const verify = (siteId, name, secretKey) => {
+    return new Promise((resolve, reject) => {
+        const body = { name };
+        const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'accept': 'application/json',
+                'User-Agent': '',
+                'Authorization': `${secretKey}`
+            }
+        });
+        const data = await response.json();
+        if(data.message === 'success') {
+            console.log(`Authentication successful for siteId ${siteId}`)
+            resolve(true)
+        }
+        console.log(`Authentication failed for siteId ${siteId}`)
+        resolve(false)
+    });
+    
+}
