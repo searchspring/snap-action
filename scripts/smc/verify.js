@@ -24,20 +24,18 @@ const METRICS_DIR = './metrics';
         console.log("siteSecretKeys", siteSecretKeys)
         console.log("secrets", secrets)
 
+        let secretsData;
         try {
-            const secrets = `{n "SNAPFU_AWS_BUCKET": "***",n "VRNTN7_SECRET_KEY": "***",n "WEBSITE_SECRET_KEY": "***",n "SNAPFU_AWS_KEY_ID": "***",n "SNAPFU_AWS_SECRET_ACCESS_KEY": "***",n "SNAPFU_AWS_DISTRIBUTION_ID": "***",n "MACHINE_TOKEN": "***",n "PACKAGE_TOKEN": "***",n "github_token": "***"n}`;
             const jsonSerializingCharacter = secrets.slice(1,2);
             console.log("jsonSerializingCharacter", jsonSerializingCharacter);
 
             const secretsUnserialized = secrets.split(`${jsonSerializingCharacter} "`).join('"').split(`"${jsonSerializingCharacter}}`).join('"}');
-            const secretsData = JSON.parse(secretsUnserialized)
-            
-            console.log("secretsData['WEBSITE_SECRET_KEY']", secretsData['WEBSITE_SECRET_KEY'])
+            secretsData = JSON.parse(secretsUnserialized)
         } catch(e) {
             console.log("Could not parse secrets");
-            console.log(e);
         }
 
+        
         
         
         
@@ -48,11 +46,22 @@ const METRICS_DIR = './metrics';
             
         } else if (siteId_Type == 'object') {
             // multi site
-            siteIds.split(',').forEach(id => {
-                console.log("id: ", id);
-                // console.log("secret is", secrets[`${id.toUpperCase()}_SECRET_KEY`])
-                
-                
+            const siteIds = siteIds.split(',').filter(a => a);
+            const siteNames = siteNames.split(',').filter(a => a);
+
+            if(siteIds.length !== siteNames.length) {
+                console.log("The amount of siteIds and siteNames does not match")
+                exit(1);
+            }
+
+            siteIds.forEach(id => {
+                if(!secretsData[`${id}_SECRET_KEY`]) {
+                    console.log(`Could not find github secret '${id}_SECRET_KEY'.
+                    It can be added by running 'snapfu secrets add' in the project's directory locally, 
+                    or added manual in the project's repository secrets. 
+                    The value can be obtained in the Searchspring Management Console.`);
+                    exit(1);
+                }
             });
         }
 
