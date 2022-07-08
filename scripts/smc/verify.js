@@ -55,35 +55,56 @@ const METRICS_DIR = './metrics';
                 exit(1);
             }
 
-            siteIds.forEach(id => {
-                const key = secretsData[`WEBSITE_SECRET_KEY_${id.toUpperCase()}`] || secretsData[`WEBSITE_SECRET_KEY_${id}`] || secretsData[`WEBSITE_SECRET_KEY_${id.toLowerCase()}`];
-                if(!key) {
-                    console.log(`Could not find github secret 'WEBSITE_SECRET_KEY_${id.toUpperCase()}'.
+            siteIds.forEach((siteId, index) => {
+                const secretKey = secretsData[`WEBSITE_SECRET_KEY_${siteId.toUpperCase()}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId.toLowerCase()}`];
+                if(!secretKey) {
+                    console.log(`
+Could not find Github secret 'WEBSITE_SECRET_KEY_${siteId.toUpperCase()}' in 'secrets' input.
 It can be added by running 'snapfu secrets add' in the project's directory locally, 
 or added manual in the project's repository secrets. 
-The value can be obtained in the Searchspring Management Console.`);
+The value can be obtained in the Searchspring Management Console.
+Then ensure that you are providing 'secrets' when running the action. ie:
+
+jobs:
+  Publish:
+    runs-on: ubuntu-latest
+    name: Snap Action
+    steps:
+      - name: Checkout action
+        uses: actions/checkout@v2
+        with:
+          repository: searchspring/snap-action
+      - name: Run @searchspring/snap-action
+        uses: ./
+        with:
+          secrets: \${{ toJSON(secrets) }}
+          ...
+`);
                     exit(1);
                 }
+
+                const name = siteNames[index];
+                const body = { name };
+                const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
+                    method: 'post',
+                    body: JSON.stringify(body),
+                    headers: {
+                        // 'Content-Type': 'application/json',
+                        'accept': 'application/json',
+                        'User-Agent': '',
+                        'Authorization': `${secretKey}`
+                    }
+                });
+                const data = await response.json();
+                console.log("data", data);
+
             });
         }
 
-        const body = { 
-            name: ''
-        };
+        
         
 
-        // const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
-        //     method: 'post',
-        //     body: JSON.stringify(body),
-        //     headers: {
-        //         // 'Content-Type': 'application/json',
-        //         'accept': 'application/json',
-        //         'User-Agent': '',
-        //         'Authorization': `${secretKey}`
-        //     }
-        // });
-        // const data = await response.json();
-        // console.log("data", data);
+        
         
     } catch (err) {
         console.error('unable to process verify file');
