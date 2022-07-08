@@ -279,19 +279,36 @@ runs:
         fi;
         if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
 
-    # - name: Invalidate Files
-    #   id: invalidation
-    #   shell: bash
-    #   working-directory: repository
-    #   env:
-    #     AWS_MAX_ATTEMPTS: 9
-    #   run: |
-    #     if [ ${{ steps.variables.outputs.branch }} = production ]; then \
-    #       aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
-    #     else \
-    #       aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
-    #       if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi;
-    #     fi
+    - name: Invalidate Files
+      id: invalidation
+      shell: bash
+      working-directory: repository
+      env:
+        AWS_MAX_ATTEMPTS: 9
+      run: |
+        if [ ${{ steps.variables.outputs.branch }} = production ]; then
+          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+            aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
+          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
+            echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
+              do
+                echo "Invalidating files for siteId $siteId"
+                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/*"
+              done
+          fi
+        else
+          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+            aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
+            if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi
+          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
+            echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
+              do
+                echo "Invalidating files for siteId $siteId on branch ${{ steps.variables.outputs.branch }}"
+                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ steps.variables.outputs.branch }}/*"
+                if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi
+              done
+          fi
+        fi
 
     # - run: |
     #     npx -y jjo \
