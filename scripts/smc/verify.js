@@ -14,7 +14,7 @@ const METRICS_DIR = './metrics';
     try {
     
         const argv = minimist(process.argv.slice(2),  { '--': true });
-        const { siteId_Type, siteId, siteIds, siteNames, siteSecretKeys, secretKey, secrets, secretstoJSON, secretsfromJSON } = argv;
+        const { siteId_Type, siteId, siteIds, siteNames, siteSecretKeys, secretKey, secrets } = argv;
 
         console.log("siteId_Type", siteId_Type)
         console.log("siteId", siteId)
@@ -23,8 +23,6 @@ const METRICS_DIR = './metrics';
         console.log("secretKey", secretKey)
         console.log("siteSecretKeys", siteSecretKeys)
         console.log("secrets", secrets)
-        console.log("secretstoJSON", `${secretstoJSON}`)
-        console.log("secretsfromJSON", `${secretsfromJSON}`)
 
         try {
             const secretsData = JSON.parse(secrets.replaceAll('n', ''))
