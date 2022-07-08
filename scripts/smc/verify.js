@@ -55,7 +55,8 @@ const METRICS_DIR = './metrics';
                 exit(1);
             }
 
-            siteIds.forEach((siteId, index) => {
+            for (let index = 0; index < siteIds.length; index++) {
+                const siteId = siteIds[index];
                 const secretKey = secretsData[`WEBSITE_SECRET_KEY_${siteId.toUpperCase()}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId.toLowerCase()}`];
                 if(!secretKey) {
                     console.log(`
@@ -97,8 +98,8 @@ jobs:
                 });
                 const data = await response.json();
                 console.log("data", data);
-
-            });
+            }
+            
         }
 
         
