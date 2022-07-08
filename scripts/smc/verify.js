@@ -14,22 +14,23 @@ const METRICS_DIR = './metrics';
     try {
     
         const argv = minimist(process.argv.slice(2),  { '--': true });
-        const { siteId_Type, siteId, siteIds, siteNames, siteSecretKeys, secretKey, secrets } = argv;
+        // const { siteId_Type, siteId, siteIds, siteNames, siteSecretKeys, secretKey, secrets } = argv;
 
-        console.log("siteId_Type", siteId_Type)
-        console.log("siteId", siteId)
-        console.log("siteIds", siteIds)
-        console.log("siteNames", siteNames)
-        console.log("secretKey", secretKey)
-        console.log("siteSecretKeys", siteSecretKeys)
-        console.log("secrets", secrets)
+
+        console.log("siteId_Type", argv.siteId_Type)
+        console.log("siteId", argv.siteId)
+        console.log("siteIds", argv.siteIds)
+        console.log("siteNames", argv.siteNames)
+        console.log("secretKey", argv.secretKey)
+        console.log("siteSecretKeys", argv.siteSecretKeys)
+        console.log("secrets", argv.secrets)
 
         let secretsData;
         try {
-            const jsonSerializingCharacter = secrets.slice(1,2);
+            const jsonSerializingCharacter = argv.secrets.slice(1,2);
             console.log("jsonSerializingCharacter", jsonSerializingCharacter);
 
-            const secretsUnserialized = secrets.split(`${jsonSerializingCharacter} "`).join('"').split(`"${jsonSerializingCharacter}}`).join('"}');
+            const secretsUnserialized = argv.secrets.split(`${jsonSerializingCharacter} "`).join('"').split(`"${jsonSerializingCharacter}}`).join('"}');
             secretsData = JSON.parse(secretsUnserialized)
         } catch(e) {
             console.log("Could not parse secrets");
@@ -41,13 +42,13 @@ const METRICS_DIR = './metrics';
         
         
 
-        if(siteId_Type == 'string') {
+        if(argv.siteId_Type == 'string') {
             // single site
             
-        } else if (siteId_Type == 'object') {
+        } else if (argv.siteId_Type == 'object') {
             // multi site
-            const siteIds = siteIds.split(',').filter(a => a);
-            const siteNames = siteNames.split(',').filter(a => a);
+            const siteIds = argv.siteIds.split(',').filter(a => a);
+            const siteNames = argv.siteNames.split(',').filter(a => a);
 
             if(siteIds.length !== siteNames.length) {
                 console.log("The amount of siteIds and siteNames does not match")
