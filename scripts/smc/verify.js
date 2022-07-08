@@ -1,4 +1,4 @@
-const fetch = import('node-fetch');
+import fetch from 'node-fetch';
 const fsp = require('fs').promises;
 const exit = require('process').exit;
 const minimist = require('minimist');
