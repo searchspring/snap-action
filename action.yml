@@ -139,44 +139,44 @@ runs:
           --secretKey "${{ inputs.secretKey }}" \
           --secrets '${{ steps.variables.outputs.secrets }}';
 
-    # - name: Cache node_modules
-    #   id: cache
-    #   uses: actions/cache@v2
-    #   env:
-    #     cache-name: cache-node-modules
-    #   with:
-    #     # npm cache files are stored in `~/.npm` on Linux/macOS
-    #     path: ~/.npm
-    #     key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-build-${{ env.cache-name }}-
-    #       ${{ runner.os }}-build-
-    #       ${{ runner.os }}-
+    - name: Cache node_modules
+      id: cache
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        # npm cache files are stored in `~/.npm` on Linux/macOS
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
 
-    # - name: Install Packages
-    #   id: install
-    #   shell: bash
-    #   working-directory: repository
-    #   env:
-    #     NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
-    #   run: |
-    #     npm install
+    - name: Install Packages
+      id: install
+      shell: bash
+      working-directory: repository
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
+      run: |
+        npm install
 
-    # - name: Build Bundle
-    #   id: build
-    #   shell: bash
-    #   working-directory: repository
-    #   run: |
-    #     npm run build
-    #     if [ ! -f "dist/bundle.js" ]; then \
-    #       echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
-    #       echo "Missing dist/bundle.js"; \
-    #       exit 1; \
-    #     elif [ ! -f "dist/universal.bundle.js" ]; then \
-    #       echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
-    #       echo "Missing dist/universal.bundle.js"; \
-    #       exit 1; \
-    #     fi;
+    - name: Build Bundle
+      id: build
+      shell: bash
+      working-directory: repository
+      run: |
+        npm run build
+        if [ ! -f "dist/bundle.js" ]; then \
+          echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
+          echo "Missing dist/bundle.js"; \
+          exit 1; \
+        elif [ ! -f "dist/universal.bundle.js" ]; then \
+          echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
+          echo "Missing dist/universal.bundle.js"; \
+          exit 1; \
+        fi;
 
     # - name: Run Tests
     #   id: test
@@ -200,21 +200,15 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        npm install -g "https://github.com/searchspring/snapfu.git#recs-multi-site"
+        npm install -g "https://github.com/searchspring/snapfu.git#recs-multi-site" # TODO remove this
 
-        snapfu recs sync \
-          --secret-key "${{ inputs.secretKey }}" \
-          --secrets-ci '${{ steps.variables.outputs.secrets }}';
-
-      # if [ ${{ steps.variables.outputs.branch }} = production ]; then \
-      #   npm install -g "https://github.com/searchspring/snapfu.git#recs-multi-site"
-
-      #   snapfu recs sync \
-      #     --secret-key "${{ inputs.secretKey }}" \
-      #     --secrets '${{ steps.variables.outputs.secrets }}';
-      # else \
-      #   echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
-      # fi; \
+        if [ ${{ steps.variables.outputs.branch }} = production ]; then \
+          snapfu recs sync \
+            --secret-key "${{ inputs.secretKey }}" \
+            --secrets-ci '${{ steps.variables.outputs.secrets }}';
+        else \
+          echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
+        fi; \
     
     # - name: Lighthouse Tests
     #   id: lighthouse
@@ -262,18 +256,30 @@ runs:
     #       aws s3 cp --region us-east-1 ./metrics/SnapAction*.json s3://datawarehouse-stage/team-metrics-import/; \
     #     fi;
         
-    # - name: Copy Files to S3
-    #   id: s3-upload
-    #   shell: bash
-    #   working-directory: repository
-    #   run: |
-    #     if [ "${{ github.event_name }}" = "pull_request" ]; then \
-    #       echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
-    #     else \
-    #       aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
-    #       aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
-    #     fi;
-    #     if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
+    - name: Copy Files to S3
+      id: s3-upload
+      shell: bash
+      working-directory: repository
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then \
+          echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
+        else \
+          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then \
+            aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+            aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then \
+            echo "${{ steps.variables.outputs.siteIds }}" | \
+              tr , '\n' | \
+                while read siteId \
+                  do
+                    echo "Copying files to S3 for siteId $siteId"
+                    aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
+                    aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
+                  done;
+          fi;
+
+        fi;
+        if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
 
     # - name: Invalidate Files
     #   id: invalidation
