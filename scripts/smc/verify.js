@@ -23,8 +23,30 @@ const METRICS_DIR = './metrics';
         console.log("secretKey", secretKey)
         console.log("siteSecretKeys", siteSecretKeys)
         console.log("secrets", secrets)
-        console.log("secretstoJSON", secretstoJSON)
-        console.log("secretsfromJSON", secretsfromJSON)
+        console.log("secretstoJSON", `${secretstoJSON}`)
+        console.log("secretsfromJSON", `${secretsfromJSON}`)
+
+        try {
+            const x = JSON.parse(secretstoJSON);
+            console.log("x", x)
+            console.log("x", `${x}`)
+        } catch(e) {
+            console.log(e);
+        }
+
+        try {
+            const y = JSON.parse(secretsfromJSON);
+            console.log("y", y)
+            console.log("y", `${y}`)
+        } catch(e) {
+            console.log(e);
+        }
+
+        try {
+            console.log("secretsfromJSON['WEBSITE_SECRET_KEY']", secretsfromJSON['WEBSITE_SECRET_KEY'])
+        } catch(e) {
+            console.log(e);
+        }
         
         
         
