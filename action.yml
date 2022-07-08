@@ -204,7 +204,7 @@ runs:
 
         snapfu recs sync \
           --secret-key "${{ inputs.secretKey }}" \
-          --secrets '${{ steps.variables.outputs.secrets }}';
+          --secrets-ci '${{ steps.variables.outputs.secrets }}';
 
       # if [ ${{ steps.variables.outputs.branch }} = production ]; then \
       #   npm install -g "https://github.com/searchspring/snapfu.git#recs-multi-site"
