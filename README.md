@@ -102,3 +102,12 @@ The `skipLighthouse` input parameter is optional. If set to `true`, the action w
 ### skipPublish
 The `skipPublish` input parameter is optional. If set to `true`, the action will not publish to the CDN.
 
+### secrets
+The `secrets` input parameter should be provided if the project contains multiple siteIds in package.json
+
+It is expected to be encoded using `toJSON`
+
+```yml
+with:
+  secrets: \${{ toJSON(secrets) }}
+```
