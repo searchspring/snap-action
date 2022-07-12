@@ -31,6 +31,7 @@ const verify = (siteId, name, secretKey) => {
 
         if(argv['siteId_Type'] !== 'string' || argv['siteId_Type'] !== 'object') {
             console.log("Verify script requires 'siteId_Type' parameter with values either 'string' (single site) or 'object' (multi site)")
+            console.log("argv['siteId_Type']", argv['siteId_Type'])
             exit(1);
         }
         if(!argv['siteId_Type'] === 'string' && (!argv['siteId'] || !argv['repository'] || !argv['secretKey'])) {
