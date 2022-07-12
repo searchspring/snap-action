@@ -29,7 +29,7 @@ const verify = (siteId, name, secretKey) => {
     try {
         const argv = minimist(process.argv.slice(2),  { '--': true });
 
-        if(!argv['siteId_Type'] || !argv['siteId_Type'] !== 'string' || !argv['siteId_Type'] !== 'object') {
+        if(argv['siteId_Type'] !== 'string' || argv['siteId_Type'] !== 'object') {
             console.log("Verify script requires 'siteId_Type' parameter with values either 'string' (single site) or 'object' (multi site)")
             exit(1);
         }
