@@ -1,6 +1,5 @@
 const fsp = require('fs').promises;
 const exit = require('process').exit;
-const github = require('@actions/github');
 const getCliArgs = require('../utils/getCliArgs');
 
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
@@ -8,12 +7,6 @@ const METRICS_DIR = './metrics';
 
 
 (async function () {
-
-    if(github.context.eventName !== 'pull_request') {
-        console.log('Skipping lighthouse metrics generation due to non pull_request event')
-        exit(0);
-    }
-
     try {
         await prepare();
         await generateMetrics();
@@ -41,7 +34,7 @@ async function generateMetrics() {
     }
 
     const now = new Date()
-    const args = getCliArgs(['siteId', 'branch']);
+    const args = getCliArgs(['siteId', 'branch', 'repositoryOwner', 'repository', 'issueNumber']);
 
     const lighthouseFileContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
     const lighthouseData = JSON.parse(lighthouseFileContents);
@@ -60,7 +53,7 @@ async function generateMetrics() {
         performance: toPercentage(performance),
     };    
 
-    const { siteId, branch } = args;
+    const { siteId, branch, repositoryOwner, repository, issueNumber } = args;
     const reportHTMLFile = representativeRun.htmlPath.split('/').pop();
     const report = `https://snapui.searchspring.io/${siteId}/.lighthouse/${branch}/${reportHTMLFile}`;
     const obj = {
@@ -69,15 +62,15 @@ async function generateMetrics() {
         data: {
             siteId,
             branch,
-            repositoryOwner: github.context.payload.organization.login,
-            repository: github.context.payload.repository.name,
-            issueNumber: github.context.payload.pull_request.number,
+            repositoryOwner,
+            repository,
+            issueNumber,
             report,
             scores,
         }
     };
     
-    const filename = `SnapAction-${github.context.payload.repository.name}-lighthouse-${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}_${now.getHours()}${now.getMinutes()}.json`;
+    const filename = `SnapAction-${repository}-lighthouse-${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}_${now.getHours()}${now.getMinutes()}.json`;
     const contents = JSON.stringify(obj, null, '  ');
 
     await fsp.writeFile(`${METRICS_DIR}/${filename}`, contents);

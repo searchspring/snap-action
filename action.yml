@@ -245,19 +245,16 @@ runs:
       shell: bash
       run: |
         if [ ${{ inputs.skipLighthouse }} = false ]; then \
-          node scripts/metrics/lighthouse.js \
-            --siteId "${{ steps.variables.outputs.siteId }}" \
-            --branch "${{ steps.variables.outputs.branch }}";
-
-          node scripts/smc/verify.js \
-            --siteId_Type "${{ steps.variables.outputs.siteId_Type }}" \
-            --siteId "${{ steps.variables.outputs.siteId }}" \
-            --repository "${{ steps.variables.outputs.repository }}" \
-            --secretKey "${{ inputs.secretKey }}" \
-            --siteIds "${{ steps.variables.outputs.siteIds }}" \
-            --siteNames "${{ steps.variables.outputs.siteNames }}" \
-            --secrets-ci '${{ steps.variables.outputs.secrets }}';
-            
+          if [ "${{ github.event_name }}" = "pull_request" ]; then \
+            node scripts/metrics/lighthouse.js \
+              --siteId "${{ steps.variables.outputs.siteId }}" \
+              --branch "${{ steps.variables.outputs.branch }}" \
+              --repositoryOwner "${{ github.repository_owner }}" \
+              --repository "${{ steps.variables.outputs.repository }}" \
+              --issueNumber "${{ steps.variables.outputs.pullRequestID }}";
+          else \
+            echo "Skipping lighthouse metrics generation due to non pull_request event"; \
+          fi;
         else \
           echo "skipping lighthouse metrics generation due to skipLighthouse flag"; \
         fi;
