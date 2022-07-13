@@ -200,7 +200,7 @@ runs:
       working-directory: repository
       run: |
         if [ ${{ steps.variables.outputs.branch }} = production ]; then \
-          npm install
+          npm install -g "https://github.com/searchspring/snapfu.git#recs-multi-site" # TODO: replace with npm install
           snapfu recs sync \
             --secret-key "${{ inputs.secretKey }}" \
             --secrets-ci '${{ steps.variables.outputs.secrets }}';
