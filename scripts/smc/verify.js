@@ -1,62 +1,112 @@
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const exit = require('process').exit;
-const minimist = require('minimist');
+const https = require('https');
 
 const verify = (siteId, name, secretKey) => {
     return new Promise(async (resolve, _) => {
-        const body = { name };
-        const response = await fetch(`https://smc-config-api.kube.searchspring.io/api/customer/${siteId}/verify`, {
+
+        const data = JSON.stringify({
+            name
+        });
+
+        const options = {
+            hostname: 'https://smc-config-api.kube.searchspring.io',
+            port: 443,
+            path: `/api/customer/${siteId}/verify`,
             method: 'POST',
-            body: JSON.stringify(body),
             headers: {
                 'accept': 'application/json',
                 'User-Agent': '',
                 'Authorization': `${secretKey}`
-            }
+            },
+        };
+
+        const req = https.request(options, res => {
+            console.log(`statusCode: ${res.statusCode}`);
+
+            res.on('data', d => {
+                process.stdout.write(d);
+            });
         });
-        const data = await response.json();
-        if(data.message === 'success') {
-            console.log(`Authentication successful for siteId ${siteId}`)
-            resolve(true)
-        } else {
-            console.log(`Authentication failed for siteId ${siteId}`)
-            resolve(false)
-        }
+
+        req.on('error', error => {
+            console.error(error);
+        });
+
+        req.write(data);
+        req.end();
+        
+        
+        // if(data.message === 'success') {
+        //     console.log(`Authentication successful for siteId ${siteId}`)
+        //     resolve(true)
+        // } else {
+        //     console.log(`Authentication failed for siteId ${siteId}`)
+        //     resolve(false)
+        // }
     });
+}
+
+function getCliArg(name) {
+    const args = process.argv.slice(2);
+    try {
+        return args.filter(arg => arg.includes(`--${name}=`)).pop().split('=')[1]
+    } catch(e) {
+        return '';
+    }
 }
 
 (async function () {
     try {
-        const argv = minimist(process.argv.slice(2),  { '--': true });
+        const args = process.argv.slice(2);
+        console.log("args", args);
 
-        if(argv['siteId_Type'] !== 'string' && argv['siteId_Type'] !== 'object') {
+        const siteId_Type = getCliArg('siteId_Type');
+        console.log("siteId_Type", siteId_Type);
+
+        const siteId = getCliArg('siteId');
+        console.log("siteId", siteId);
+
+        const repository = getCliArg('repository');
+        console.log("repository", repository);
+
+        const secretKey = getCliArg('secretKey');
+        console.log("secretKey", secretKey);
+
+        const siteIds = getCliArg('siteIds');
+        console.log("siteIds", siteIds);
+
+        const siteNames = getCliArg('siteNames');
+        console.log("siteNames", siteNames);
+
+        const secretsCi = getCliArg('secrets-ci');
+        console.log("secrets-ci", secretsCi);
+
+
+        if(siteId_Type !== 'string' && siteId_Type !== 'object') {
             console.log("Verify script requires 'siteId_Type' parameter with values either 'string' (single site) or 'object' (multi site)")
             exit(1);
         }
-        if(!argv['siteId_Type'] === 'string' && (!argv['siteId'] || !argv['repository'] || !argv['secretKey'])) {
+        if(!siteId_Type === 'string' && (!siteId || !repository || !secretKey)) {
             console.log("Verify script requires 'siteId', 'repository' and 'secretKey' parameter")
             exit(1);
         }
-        if(!argv['siteId_Type'] === 'object' && (!argv['siteIds'] || !argv['siteNames'] || !argv['secrets-ci'])) {
+        if(!siteId_Type === 'object' && (!siteIds || !siteNames || !secretsCi)) {
             console.log("Verify script requires 'siteId', 'repository' and 'secrets-ci' parameter")
             exit(1);
         }
 
         let authFailed = false;
-        if(argv.siteId_Type === 'string') {
+        if(siteId_Type === 'string') {
             // single site
-            const siteId = argv.siteId;
-            const name = argv.repository;
-            const secretKey = argv.secretKey;
-
+            const name = repository;
             const success = await verify(siteId, name, secretKey);
             if(!success) {
                 authFailed = true;
             }
-        } else if (argv.siteId_Type === 'object') {
+        } else if (siteId_Type === 'object') {
             // multi site
-            const siteIds = argv.siteIds.split(',').filter(a => a);
-            const siteNames = argv.siteNames.split(',').filter(a => a);
+            const siteIds = siteIds.split(',').filter(a => a);
+            const siteNames = siteNames.split(',').filter(a => a);
 
             if(siteIds.length !== siteNames.length) {
                 console.log("The amount of siteIds and siteNames does not match")
@@ -65,8 +115,8 @@ const verify = (siteId, name, secretKey) => {
             
             let secretsData;
             try {
-                const jsonSerializingCharacter = argv['secrets-ci'].slice(1,2);
-                const secretsUnserialized = argv['secrets-ci'].split(`${jsonSerializingCharacter} "`).join('"').split(`"${jsonSerializingCharacter}}`).join('"}');
+                const jsonSerializingCharacter = secretsCi.slice(1,2);
+                const secretsUnserialized = secretsCi.split(`${jsonSerializingCharacter} "`).join('"').split(`"${jsonSerializingCharacter}}`).join('"}');
                 secretsData = JSON.parse(secretsUnserialized)
             } catch(e) {
                 console.log("Could not parse secrets");
@@ -114,7 +164,7 @@ jobs:
         }
         exit(0);
     } catch (err) {
-        console.error('unable to process verify file');
+        console.error('Error during authentication');
         console.error(err);
         exit(1);
     }
