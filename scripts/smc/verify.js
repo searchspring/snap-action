@@ -32,6 +32,7 @@ const verify = (siteId, name, secretKey) => {
 
         req.on('error', error => {
             console.error(error);
+            exit(1);
         });
 
         req.write(data);
