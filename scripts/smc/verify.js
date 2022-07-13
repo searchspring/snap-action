@@ -1,6 +1,8 @@
 const exit = require('process').exit;
 const https = require('https');
 
+const getCliArgs = require('../utils/getCliArgs');
+
 const verify = (siteId, name, secretKey) => {
     return new Promise(async (resolve, _) => {
 
@@ -46,67 +48,36 @@ const verify = (siteId, name, secretKey) => {
     });
 }
 
-function getCliArg(name) {
-    const args = process.argv.slice(2);
-    try {
-        return args.filter(arg => arg.includes(`--${name}=`)).pop().split('=')[1]
-    } catch(e) {
-        return '';
-    }
-}
-
 (async function () {
     try {
-        const args = process.argv.slice(2);
-        console.log("args", args);
+        const args = getCliArgs(['siteId_Type', 'siteId', 'repository', 'secretKey', 'siteIds', 'siteNames', 'secrets-ci']);
+        console.log("args", args)
 
-        const siteId_Type = getCliArg('siteId_Type');
-        console.log("siteId_Type", siteId_Type);
-
-        const siteId = getCliArg('siteId');
-        console.log("siteId", siteId);
-
-        const repository = getCliArg('repository');
-        console.log("repository", repository);
-
-        const secretKey = getCliArg('secretKey');
-        console.log("secretKey", secretKey);
-
-        const siteIds = getCliArg('siteIds');
-        console.log("siteIds", siteIds);
-
-        const siteNames = getCliArg('siteNames');
-        console.log("siteNames", siteNames);
-
-        const secretsCi = getCliArg('secrets-ci');
-        console.log("secrets-ci", secretsCi);
-
-
-        if(siteId_Type !== 'string' && siteId_Type !== 'object') {
+        if(args.siteId_Type !== 'string' && args.siteId_Type !== 'object') {
             console.log("Verify script requires 'siteId_Type' parameter with values either 'string' (single site) or 'object' (multi site)")
             exit(1);
         }
-        if(!siteId_Type === 'string' && (!siteId || !repository || !secretKey)) {
+        if(!args.siteId_Type === 'string' && (!args.siteId || !args.repository || !args.secretKey)) {
             console.log("Verify script requires 'siteId', 'repository' and 'secretKey' parameter")
             exit(1);
         }
-        if(!siteId_Type === 'object' && (!siteIds || !siteNames || !secretsCi)) {
+        if(!args.siteId_Type === 'object' && (!args.siteIds || !args.siteNames || !args['secrets-ci'])) {
             console.log("Verify script requires 'siteId', 'repository' and 'secrets-ci' parameter")
             exit(1);
         }
 
         let authFailed = false;
-        if(siteId_Type === 'string') {
+        if(args.siteId_Type === 'string') {
             // single site
-            const name = repository;
-            const success = await verify(siteId, name, secretKey);
+            const name = args.repository;
+            const success = await verify(args.siteId, name, args.secretKey);
             if(!success) {
                 authFailed = true;
             }
-        } else if (siteId_Type === 'object') {
+        } else if (args.siteId_Type === 'object') {
             // multi site
-            const siteIds = siteIds.split(',').filter(a => a);
-            const siteNames = siteNames.split(',').filter(a => a);
+            const siteIds = args.siteIds.split(',').filter(a => a);
+            const siteNames = args.siteNames.split(',').filter(a => a);
 
             if(siteIds.length !== siteNames.length) {
                 console.log("The amount of siteIds and siteNames does not match")
@@ -115,8 +86,8 @@ function getCliArg(name) {
             
             let secretsData;
             try {
-                const jsonSerializingCharacter = secretsCi.slice(1,2);
-                const secretsUnserialized = secretsCi.split(`${jsonSerializingCharacter} "`).join('"').split(`"${jsonSerializingCharacter}}`).join('"}');
+                const jsonSerializingCharacter = args['secrets-ci'].slice(1,2);
+                const secretsUnserialized = args['secrets-ci'].split(`${jsonSerializingCharacter} "`).join('"').split(`"${jsonSerializingCharacter}}`).join('"}');
                 secretsData = JSON.parse(secretsUnserialized)
             } catch(e) {
                 console.log("Could not parse secrets");

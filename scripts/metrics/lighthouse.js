@@ -1,7 +1,7 @@
 const fsp = require('fs').promises;
 const exit = require('process').exit;
-const minimist = require('minimist');
 const github = require('@actions/github');
+const getCliArgs = require('../utils/getCliArgs');
 
 const LIGHTHOUSE_FILE = './repository/tests/lighthouse/runs/manifest.json';
 const METRICS_DIR = './metrics';
@@ -41,7 +41,7 @@ async function generateMetrics() {
     }
 
     const now = new Date()
-    const argv = minimist(process.argv.slice(2),  { '--': true });
+    const args = getCliArgs(['siteId', 'branch']);
 
     const lighthouseFileContents = await fsp.readFile(LIGHTHOUSE_FILE, 'utf8');
     const lighthouseData = JSON.parse(lighthouseFileContents);
@@ -60,7 +60,7 @@ async function generateMetrics() {
         performance: toPercentage(performance),
     };    
 
-    const { siteId, branch } = argv;
+    const { siteId, branch } = args;
     const reportHTMLFile = representativeRun.htmlPath.split('/').pop();
     const report = `https://snapui.searchspring.io/${siteId}/.lighthouse/${branch}/${reportHTMLFile}`;
     const obj = {
