@@ -23,10 +23,15 @@ const verify = (siteId, name, secretKey) => {
         };
 
         const req = https.request(options, res => {
-            console.log(`statusCode: ${res.statusCode}`);
-
-            res.on('data', d => {
-                process.stdout.write(d);
+            res.on('data', res => {
+                const response = JSON.parse(res);
+                if(response.message === 'success') {
+                    resolve(true);
+                    console.log(`Authentication successful for siteId ${siteId}`)
+                } else {
+                    console.log(`Authentication failed for siteId ${siteId}`)
+                    resolve(false)
+                }
             });
         });
 
@@ -37,15 +42,6 @@ const verify = (siteId, name, secretKey) => {
 
         req.write(data);
         req.end();
-        
-        
-        // if(data.message === 'success') {
-        //     console.log(`Authentication successful for siteId ${siteId}`)
-        //     resolve(true)
-        // } else {
-        //     console.log(`Authentication failed for siteId ${siteId}`)
-        //     resolve(false)
-        // }
     });
 }
 
