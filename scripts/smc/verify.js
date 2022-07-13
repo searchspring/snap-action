@@ -11,7 +11,7 @@ const verify = (siteId, name, secretKey) => {
         });
 
         const options = {
-            hostname: 'https://smc-config-api.kube.searchspring.io',
+            hostname: 'smc-config-api.kube.searchspring.io',
             port: 443,
             path: `/api/customer/${siteId}/verify`,
             method: 'POST',
