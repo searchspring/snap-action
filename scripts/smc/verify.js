@@ -48,7 +48,6 @@ const verify = (siteId, name, secretKey) => {
 (async function () {
     try {
         const args = getCliArgs(['siteId_Type', 'siteId', 'repository', 'secretKey', 'siteIds', 'siteNames', 'secrets-ci']);
-        console.log("args", args)
 
         if(args.siteId_Type !== 'string' && args.siteId_Type !== 'object') {
             console.log("Verify script requires 'siteId_Type' parameter with values either 'string' (single site) or 'object' (multi site)")
