@@ -80,20 +80,12 @@ const verify = (siteId, name, secretKey) => {
                 exit(1);
             }
             
-            let secretsData;
-            try {
-                const jsonSerializingCharacter = args['secrets-ci'].slice(1,2);
-                const secretsUnserialized = args['secrets-ci'].split(`${jsonSerializingCharacter} "`).join('"').split(`"${jsonSerializingCharacter}}`).join('"}');
-                secretsData = JSON.parse(secretsUnserialized)
-            } catch(e) {
-                console.log("Could not parse secrets");
-                exit(1);
-            }
+            const secrets = JSON.parse(args['secrets-ci']);
 
             for (let index = 0; index < siteIds.length; index++) {
                 const siteId = siteIds[index];
                 const name = siteNames[index];
-                const secretKey = secretsData[`WEBSITE_SECRET_KEY_${siteId.toUpperCase()}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId}`] || secretsData[`WEBSITE_SECRET_KEY_${siteId.toLowerCase()}`];
+                const secretKey = secrets[`WEBSITE_SECRET_KEY_${siteId.toUpperCase()}`] || secrets[`WEBSITE_SECRET_KEY_${siteId}`] || secrets[`WEBSITE_SECRET_KEY_${siteId.toLowerCase()}`];
                 if(!secretKey) {
                     console.log(`
 Could not find Github secret 'WEBSITE_SECRET_KEY_${siteId.toUpperCase()}' in 'secrets' input.

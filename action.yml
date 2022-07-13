@@ -80,11 +80,8 @@ runs:
         fi;
         echo "::set-output name=branch::$branch"
         echo "Using branch: $branch"
-        
-        # ${{ inputs.secrets }}
-        # ${{ toJSON(inputs.secrets) }}
 
-        secrets=`echo '${{ toJSON(inputs.secrets) }}'`;
+        secrets=`echo '${{ inputs.secrets }}' | jq -c .`;
         echo "::set-output name=secrets::$secrets";
         echo "Using secrets: $secrets";
 
