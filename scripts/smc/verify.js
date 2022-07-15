@@ -85,7 +85,7 @@ const verify = (siteId, name, secretKey) => {
             for (let index = 0; index < siteIds.length; index++) {
                 const siteId = siteIds[index];
                 const name = siteNames[index];
-                const secretKey = secrets[`WEBSITE_SECRET_KEY_${siteId.toUpperCase()}`] || secrets[`WEBSITE_SECRET_KEY_${siteId}`] || secrets[`WEBSITE_SECRET_KEY_${siteId.toLowerCase()}`];
+                const secretKey = secrets[`WEBSITE_SECRET_KEY_${siteId.toUpperCase()}`];
                 if(!secretKey) {
                     console.log(`
 Could not find Github secret 'WEBSITE_SECRET_KEY_${siteId.toUpperCase()}' in 'secrets' input.
