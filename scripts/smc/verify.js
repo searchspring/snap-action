@@ -24,14 +24,18 @@ const verify = (siteId, name, secretKey) => {
 
         const req = https.request(options, res => {
             res.on('data', res => {
-                const response = JSON.parse(res);
-                if(response.message === 'success') {
-                    resolve(true);
-                    console.log(`Authentication successful for siteId ${siteId}`)
-                } else {
+                try {
+                    const response = JSON.parse(res);
+                    if(response.message === 'success') {
+                        resolve(true);
+                        console.log(`Authentication successful for siteId ${siteId}`)
+                    }
+                } catch(e) {
+                    console.log(e);
                     console.log(`Authentication failed for siteId ${siteId}`)
-                    resolve(false)
+                    resolve(false);
                 }
+                
             });
         });
 
