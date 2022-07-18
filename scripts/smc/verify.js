@@ -31,7 +31,7 @@ const verify = (siteId, name, secretKey) => {
                         console.log(`Authentication successful for siteId ${siteId}`)
                     }
                 } catch(e) {
-                    console.log(e);
+                    // api returns string if auth fails
                     console.log(`Authentication failed for siteId ${siteId}`)
                     resolve(false);
                 }
