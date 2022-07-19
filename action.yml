@@ -159,7 +159,7 @@ runs:
       env:
         NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
       run: |
-        npm install
+        npm ci
 
     - name: Build Bundle
       id: build
