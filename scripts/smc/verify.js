@@ -84,7 +84,12 @@ const verify = (siteId, name, secretKey) => {
                 exit(1);
             }
             
-            const secrets = JSON.parse(args['secrets-ci']);
+            let secrets;
+            try {
+                secrets = JSON.parse(args['secrets-ci']);
+            } catch (e) {
+                console.log("Could not parse secrets. Please provide a 'secrets' parameter. Example: `secrets: ${{ toJSON(secrets) }}`");
+            }
 
             for (let index = 0; index < siteIds.length; index++) {
                 const siteId = siteIds[index];
