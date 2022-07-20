@@ -102,3 +102,32 @@ The `skipLighthouse` input parameter is optional. If set to `true`, the action w
 ### skipPublish
 The `skipPublish` input parameter is optional. If set to `true`, the action will not publish to the CDN.
 
+### secrets
+The `secrets` input parameter is required if the `searchspring.siteId` property of the project's package.json file is an object.
+
+For example: 
+```json
+{
+  "searchspring": {
+    "siteId": {
+      "abc123": {
+        "name": "website.com"
+      },
+      "def456": {
+        "name": "website.com.au"
+      }
+    }
+  }
+}
+```
+
+When `searchspring.siteId` is an object, it allows multiple siteIds to be specified. A repository secret for each siteId must exist in the `WEBSITE_SECRET_KEY_${siteId}` format and contain the `secretKey` value found in the [Searchspring Management Console](https://manage.searchspring.net/)
+
+For the example above `WEBSITE_SECRET_KEY_ABC123` and `WEBSITE_SECRET_KEY_DEF456` must exist. 
+
+When using `secrets`, it is expected to be encoded using `toJSON`
+
+```yml
+with:
+  secrets: ${{ toJSON(secrets) }}
+```

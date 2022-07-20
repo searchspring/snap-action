@@ -45,6 +45,9 @@ inputs:
   GITHUB_BOT_TOKEN:
     description: 'Github user PAT token for posting lighthouse results in pull request comments'
     required: false
+  secrets:
+    description: 'Secrets encoded via toJSON. Expected if project has multiple siteIds in package.json. Expects repository secret for each key (ie. `WEBSITE_SECRET_KEY_${siteId}`)'
+    required: false
 
 runs:
   using: "composite"
@@ -77,9 +80,33 @@ runs:
         fi;
         echo "::set-output name=branch::$branch"
         echo "Using branch: $branch"
-        siteId=`jq -r '.searchspring.siteId' < package.json`
-        echo "::set-output name=siteId::$siteId"
-        echo "Using siteId: $siteId"
+
+        secrets=`echo '${{ inputs.secrets }}' | jq -c .`;
+        echo "::set-output name=secrets::$secrets";
+        echo "Using secrets: $secrets";
+
+        siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
+        echo "::set-output name=siteId_Type::$siteId_Type"; \
+
+        if [ $siteId_Type = 'string' ]; then \
+          echo "siteId is a string"; \
+          siteId=`jq -r '.searchspring.siteId' < package.json`; \
+          echo "::set-output name=siteId::$siteId"; \
+          echo "Using siteId: $siteId"; \
+        elif [ $siteId_Type = 'object' ]; then \
+          echo "siteId is an object"; \
+          siteIds=`jq -r '.searchspring.siteId | keys | join(",")' < package.json`; \
+          echo "::set-output name=siteIds::$siteIds"; \
+          echo "Using siteIds: $siteIds"; \
+
+          siteNames=`jq -r '[.searchspring.siteId[].name] | join(",")' < package.json`; \
+          echo "::set-output name=siteNames::$siteNames"; \
+          echo "Using siteNames: $siteNames"; \
+        else \
+          echo "Cannot determine project siteId from package.json"; \
+          exit 1; \
+        fi;
+
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
@@ -89,22 +116,6 @@ runs:
         startTime=`date -u +%s`
         echo "::set-output name=startTime::$startTime"
         echo "Using startTime: $startTime"
-    
-    - name: Authenticate siteId and secretKey
-      id: authenticate
-      shell: bash
-      working-directory: repository
-      run: |
-        if curl https://smc-config-api.kube.searchspring.io/api/customer/${{ steps.variables.outputs.siteId }}/verify \
-        -X POST \
-        -d '{"name":"${{ steps.variables.outputs.repository }}"}' \
-        -H "Authorization: ${{ inputs.secretKey }}" \
-        -H "accept: application/json" -H "User-Agent:" \
-        | jq .message \
-        | grep -q 'success'; \
-        then echo 'siteId matches account secretKey!'; \
-        else echo 'Authentication failed! Please ensure siteId, secretKey and repository name are correct.'; exit 1; \
-        fi;
 
     - name: Setup Node
       id: setup-node
@@ -128,6 +139,19 @@ runs:
           ${{ runner.os }}-build-
           ${{ runner.os }}-
 
+    - name: Authenticate siteId and secretKey
+      id: authenticate
+      shell: bash
+      run: |
+        node scripts/smc/verify.js \
+          --siteId_Type "${{ steps.variables.outputs.siteId_Type }}" \
+          --siteId "${{ steps.variables.outputs.siteId }}" \
+          --repository "${{ steps.variables.outputs.repository }}" \
+          --secretKey "${{ inputs.secretKey }}" \
+          --siteIds "${{ steps.variables.outputs.siteIds }}" \
+          --siteNames "${{ steps.variables.outputs.siteNames }}" \
+          --secrets-ci '${{ steps.variables.outputs.secrets }}';
+
     - name: Install Packages
       id: install
       shell: bash
@@ -135,8 +159,7 @@ runs:
       env:
         NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
       run: |
-        npm install
-        npm install -g snapfu
+        npm ci
 
     - name: Build Bundle
       id: build
@@ -177,7 +200,10 @@ runs:
       working-directory: repository
       run: |
         if [ ${{ steps.variables.outputs.branch }} = production ]; then \
-          snapfu recs sync --secret-key ${{ inputs.secretKey }}; \
+          npm install -g snapfu
+          snapfu recs sync \
+            --secret-key "${{ inputs.secretKey }}" \
+            --secrets-ci '${{ steps.variables.outputs.secrets }}';
         else \
           echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
         fi; \
@@ -219,8 +245,16 @@ runs:
       shell: bash
       run: |
         if [ ${{ inputs.skipLighthouse }} = false ]; then \
-          npm install;
-          node scripts/metrics/lighthouse.js --siteId ${{ steps.variables.outputs.siteId }} --branch ${{ steps.variables.outputs.branch }} \;
+          if [ "${{ github.event_name }}" = "pull_request" ]; then \
+            node scripts/metrics/lighthouse.js \
+              --siteId "${{ steps.variables.outputs.siteId }}" \
+              --branch "${{ steps.variables.outputs.branch }}" \
+              --repositoryOwner "${{ github.repository_owner }}" \
+              --repository "${{ steps.variables.outputs.repository }}" \
+              --issueNumber "${{ steps.variables.outputs.pullRequestID }}";
+          else \
+            echo "Skipping lighthouse metrics generation due to non pull_request event"; \
+          fi;
         else \
           echo "skipping lighthouse metrics generation due to skipLighthouse flag"; \
         fi;
@@ -236,8 +270,18 @@ runs:
         if [ "${{ github.event_name }}" = "pull_request" ]; then \
           echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
         else \
-          aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
-          aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then \
+            aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+            aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then \
+            echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
+              do
+                echo "Copying files to S3 for siteId $siteId"
+                aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
+                aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
+              done;
+          fi;
+
         fi;
         if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
 
@@ -248,11 +292,28 @@ runs:
       env:
         AWS_MAX_ATTEMPTS: 9
       run: |
-        if [ ${{ steps.variables.outputs.branch }} = production ]; then \
-          aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
-        else \
-          aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
-          if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi;
+        if [ ${{ steps.variables.outputs.branch }} = production ]; then
+          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+            aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
+          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
+            echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
+              do
+                echo "Invalidating files for siteId $siteId"
+                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/*"
+              done
+          fi
+        else
+          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+            aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
+            if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi
+          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
+            echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
+              do
+                echo "Invalidating files for siteId $siteId on branch ${{ steps.variables.outputs.branch }}"
+                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ steps.variables.outputs.branch }}/*"
+                if [ -f tests/lighthouse/runs/manifest.json ]; then aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"; fi
+              done
+          fi
         fi
 
     - run: |
