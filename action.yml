@@ -235,20 +235,18 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        git remote -v
-        git config --list
         git config user.name searchspring-machine
         git config user.email machine@searchspring.com
 
-        if [ $(git tag -l "${{ steps.variables.outputs.siteId_Type }}") ]; then
-            echo "Tag ${{ steps.variables.outputs.siteId_Type }} already exists... Creating tag "
-            newTag=$(node scripts/tag/tag.js --tags "$(git tag -l \"${{ steps.variables.outputs.siteId_Type }}-*\")")
+        if [ $(git tag -l "${{ steps.variables.outputs.packageJSONVersion }}") ]; then
+            echo "Tag ${{ steps.variables.outputs.packageJSONVersion }} already exists... Creating tag "
+            newTag=$(node scripts/tag/tag.js --tags "$(git tag -l \"${{ steps.variables.outputs.packageJSONVersion }}-*\")")
             echo "$newTag"
-            git tag -a "$newTag" -m "tagged from snap-action"
-            git push origin $newTag
+            # git tag -a "$newTag" -m "tagged from snap-action"
+            # git push origin $newTag
         else
-            git tag -a "${{ steps.variables.outputs.siteId_Type }}" -m "tagged from snap-action"
-            git push origin ${{ steps.variables.outputs.siteId_Type }}
+            git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
+            # git push origin ${{ steps.variables.outputs.packageJSONVersion }}
         fi
         
 
