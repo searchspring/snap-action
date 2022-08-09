@@ -10,7 +10,6 @@ const cmp = require('../utils/cmp');
             console.error("tags.js did not recieve any tags")
             exit(1);
         }
-        console.log("args.tags: ", args.tags)
 
         const tags = args.tags.split('\n').map(tag => tag.trim()).filter(tag => tag);
         tags.sort(cmp);
