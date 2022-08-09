@@ -242,12 +242,14 @@ runs:
             # tag exist, use tag.js to bump/add suffix version
             echo "Tag ${{ steps.variables.outputs.packageJSONVersion }} already exists."
             newTag=$(node ./../scripts/tag/tag.js --tags "$(git tag -l '${{ steps.variables.outputs.packageJSONVersion }}*')")
-            echo "Creating tag $newTag"
-            git tag -a "$newTag" -m "tagged from snap-action"
-            git push origin $newTag
-        
-            tag=`echo "$newTag"`;
-            echo "::set-output name=tag::$tag";
+            echo "newTag: $newTag"
+            if [ "${{ steps.variables.outputs.packageJSONVersion }}" != "$newTag" ]; then
+              echo "Creating tag $newTag"
+              git tag -a "$newTag" -m "tagged from snap-action"
+              git push origin $newTag
+              tag=`echo "$newTag"`;
+              echo "::set-output name=tag::$tag";
+            fi
         else
             # tag doesn't exist, create it from the package.json version
             git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
@@ -302,8 +304,10 @@ runs:
           if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then \
             aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
             aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
-            aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}
-            aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}
+            if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
+              aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}
+              aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}
+            fi
 
             
           elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then \
@@ -312,15 +316,19 @@ runs:
                 echo "Copying files to S3 for siteId $siteId"
                 aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
                 aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
-                aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.tag.outputs.tag }}
-                aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.tag.outputs.tag }}
+                if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
+                  aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.tag.outputs.tag }}
+                  aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.tag.outputs.tag }}
+                fi
               done;
           fi;
 
         fi;
         if [ -f tests/lighthouse/runs/manifest.json ]; then \
           aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; \
-          aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.tag.outputs.tag }} \
+          if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
+            aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.tag.outputs.tag }} \
+          fi
         fi;
 
     - name: Invalidate Files
@@ -343,21 +351,29 @@ runs:
         else
           if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
             aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
-            aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}/*"
+            if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
+              aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}/*"
+            fi
             if [ -f tests/lighthouse/runs/manifest.json ]; then
               aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"
-              aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.tag.outputs.tag }}/manifest.json"
+              if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
+                aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.tag.outputs.tag }}/manifest.json"
+              fi
             fi
           elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
             echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
               do
                 echo "Invalidating files for siteId $siteId on branch ${{ steps.variables.outputs.branch }}"
                 aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ steps.variables.outputs.branch }}/*"
-                echo "Invalidating files for siteId $siteId on tag ${{ steps.tag.outputs.tag }}"
-                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ steps.tag.outputs.tag }}/*"
+                if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
+                  echo "Invalidating files for siteId $siteId on tag ${{ steps.tag.outputs.tag }}"
+                  aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ steps.tag.outputs.tag }}/*"
+                fi
                 if [ -f tests/lighthouse/runs/manifest.json ]; then 
                   aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"
-                  aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/.lighthouse/${{ steps.tag.outputs.tag }}/manifest.json"
+                  if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
+                    aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/.lighthouse/${{ steps.tag.outputs.tag }}/manifest.json"
+                  fi
                 fi
               done
           fi
