@@ -11,7 +11,6 @@ const cmp = require('../utils/cmp');
             exit(1);
         }
         console.log("args.tags: ", args.tags)
-        console.log("args.tags: ", args.tags.join('|'))
 
         const tags = args.tags.split(' ');
         tags.sort(cmp);
@@ -31,7 +30,7 @@ const cmp = require('../utils/cmp');
         exit(0);
 
     } catch (err) {
-        console.error('Error during authentication');
+        console.error('Error during tag increment');
         console.error(err);
         exit(1);
     }
