@@ -10,6 +10,8 @@ const cmp = require('../utils/cmp');
             console.error("tags.js did not recieve any tags")
             exit(1);
         }
+        console.log("args.tags: ", args.tags)
+        console.log("args.tags: ", args.tags.join('|'))
 
         const tags = args.tags.split(' ');
         tags.sort(cmp);
@@ -27,7 +29,7 @@ const cmp = require('../utils/cmp');
         // increment suffix
         console.log(`${tag}-${++suffix}`)
         exit(0);
-        
+
     } catch (err) {
         console.error('Error during authentication');
         console.error(err);
