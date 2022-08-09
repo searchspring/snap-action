@@ -298,19 +298,17 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then \
-          echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
-        else \
-          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then \
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers";
+        else
+          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
             aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
             aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
             if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
               aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}
               aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}
             fi
-
-            
-          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then \
+          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
             echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
               do
                 echo "Copying files to S3 for siteId $siteId"
@@ -321,15 +319,14 @@ runs:
                   aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.tag.outputs.tag }}
                 fi
               done;
-          fi;
-
-        fi;
-        if [ -f tests/lighthouse/runs/manifest.json ]; then \
-          aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; \
-          if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
-            aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.tag.outputs.tag }} \
           fi
-        fi;
+        fi
+        if [ -f tests/lighthouse/runs/manifest.json ]; then
+          aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}
+          if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
+            aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.tag.outputs.tag }}
+          fi
+        fi
 
     - name: Invalidate Files
       id: invalidation
