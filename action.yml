@@ -240,7 +240,7 @@ runs:
 
         if [ $(git tag -l "${{ steps.variables.outputs.packageJSONVersion }}") ]; then
             echo "Tag ${{ steps.variables.outputs.packageJSONVersion }} already exists... Creating tag "
-            newTag=$(node scripts/tag/tag.js --tags "$(git tag -l \"${{ steps.variables.outputs.packageJSONVersion }}-*\")")
+            newTag=$(node ./../scripts/tag/tag.js --tags "$(git tag -l \"${{ steps.variables.outputs.packageJSONVersion }}-*\")")
             echo "$newTag"
             # git tag -a "$newTag" -m "tagged from snap-action"
             # git push origin $newTag
