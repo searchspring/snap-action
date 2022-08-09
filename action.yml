@@ -239,16 +239,17 @@ runs:
         git config user.email machine@searchspring.com
 
         if [ $(git tag -l "${{ steps.variables.outputs.packageJSONVersion }}") ]; then
-            echo "Tag ${{ steps.variables.outputs.packageJSONVersion }} already exists... Creating tag "
-            newTag=$(node ./../scripts/tag/tag.js --tags "$(git tag -l \"${{ steps.variables.outputs.packageJSONVersion }}-*\")")
-            echo "$newTag"
-            # git tag -a "$newTag" -m "tagged from snap-action"
-            # git push origin $newTag
+            # tag exist, use tag.js to bump/add suffix version
+            echo "Tag ${{ steps.variables.outputs.packageJSONVersion }} already exists."
+            newTag=$(node ./../scripts/tag/tag.js --tags "$(git tag -l \"${{ steps.variables.outputs.packageJSONVersion }}*\")")
+            echo "Creating tag $newTag"
+            git tag -a "$newTag" -m "tagged from snap-action"
+            git push origin $newTag
         else
+            # tag doesn't exist, create it from the package.json version
             git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
             # git push origin ${{ steps.variables.outputs.packageJSONVersion }}
         fi
-        
 
     - name: PR Comment
       id: pr-comment
@@ -355,11 +356,11 @@ runs:
             job=${{ github.job }} \
             url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
             runAttempt=${{ github.run_attempt }} \
-            failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || ''}}' \
+            failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.tag.conclusion == 'Failure' && 'tag' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || ''}}' \
           ) \
         > SnapAction-${{ steps.variables.outputs.repository }}-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
-        cat ./SnapAction*.json && \
-        aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
+        # cat ./SnapAction*.json && \
+        # aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
       id: metrics
       shell: bash
       if: always()
