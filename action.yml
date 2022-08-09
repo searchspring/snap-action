@@ -86,7 +86,10 @@ runs:
         echo "Using secrets: $secrets";
 
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
-        echo "::set-output name=siteId_Type::$siteId_Type"; \
+        echo "::set-output name=siteId_Type::$siteId_Type";
+
+        packageJSONVersion=`jq -r '.version' < package.json`;
+        echo "::set-output name=packageJSONVersion::$packageJSONVersion";
 
         if [ $siteId_Type = 'string' ]; then \
           echo "siteId is a string"; \
@@ -227,6 +230,23 @@ runs:
           echo 'lighthouserc.js file not found in repository, skipping lighthouse tests'; \
         fi
     
+    - name: Git Tag
+      id: tag
+      shell: bash
+      working-directory: repository
+      run: |
+        if [ $(git tag -l "${{ steps.variables.outputs.siteId_Type }}") ]; then
+            echo "Tag ${{ steps.variables.outputs.siteId_Type }} already exists... Creating tag "
+            newTag=$(node scripts/tag/tag.js --tags "$(git tag -l \"${{ steps.variables.outputs.siteId_Type }}-*\")")
+            echo "$newTag"
+            git tag -a "$newTag" -m "tagged from snap-action"
+            git push origin $newTag
+        else
+            git tag -a "${{ steps.variables.outputs.siteId_Type }}" -m "tagged from snap-action"
+            git push origin ${{ steps.variables.outputs.siteId_Type }}
+        fi
+        
+
     - name: PR Comment
       id: pr-comment
       uses: actions/github-script@v5
