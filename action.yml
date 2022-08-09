@@ -239,7 +239,7 @@ runs:
         git config user.email machine@searchspring.com
 
         if [ $(git tag -l "${{ steps.variables.outputs.packageJSONVersion }}") ]; then
-            # tag exist, use increment.js to bump/add suffix version
+            # tag exist, use scripts/tag/increment.js to bump/add suffix version
             echo "Tag ${{ steps.variables.outputs.packageJSONVersion }} already exists."
             newTag=$(node ./../scripts/tag/increment.js --tags "$(git tag -l '${{ steps.variables.outputs.packageJSONVersion }}*')")
             if [ "${{ steps.variables.outputs.packageJSONVersion }}" != "$newTag" ]; then
