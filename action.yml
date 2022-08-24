@@ -120,6 +120,26 @@ runs:
         echo "::set-output name=startTime::$startTime"
         echo "Using startTime: $startTime"
 
+        npx -y jjo \
+          timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
+          type=snap-action \
+          data=$(npx -y jjo \
+            startTime='$startTime' \
+            repository='$repository' \
+            repositoryOwner=${{ github.repository_owner }} \
+            branch='$branch' \
+            baseRef=${{ github.base_ref }} \
+            actor=${{ github.actor }} \
+            eventName=${{ github.event_name }} \
+            job=${{ github.job }} \
+            url='https://github.com/${{ github.repository_owner }}/$repository/actions/runs/${{ github.run_id }}' \
+            runAttempt=${{ github.run_attempt }} \
+          ) \
+        > SnapAction-${{ steps.variables.outputs.repository }}-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
+        cat ./SnapAction*.json && \
+        aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/ && \
+        rm ./SnapAction*.json
+
     - name: Setup Node
       id: setup-node
       uses: actions/setup-node@v2
