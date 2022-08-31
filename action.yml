@@ -296,7 +296,7 @@ runs:
       env:
         AWS_MAX_ATTEMPTS: 9
       run: |
-        elif [ ${{ inputs.skipInvalidation }} = true ]; then
+        if [ ${{ inputs.skipInvalidation }} = true ]; then
           echo "skipping invalidation due to skipInvalidation flag";
         elif [ "${{ github.event_name }}" = "pull_request" ]; then
           echo "skipping invalidation for pull_request action triggers";
