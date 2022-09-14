@@ -48,6 +48,10 @@ inputs:
   secrets:
     description: 'Secrets encoded via toJSON. Expected if project has multiple siteIds in package.json. Expects repository secret for each key (ie. `WEBSITE_SECRET_KEY_${siteId}`)'
     required: false
+  skipInvalidation:
+    description: 'Skip Cloudfront invalidation'
+    required: false
+    default: false
 
 runs:
   using: "composite"
@@ -67,7 +71,15 @@ runs:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
         aws-region: ${{ inputs.aws-region }}
-        
+
+    - name: Setup Node
+      id: setup-node
+      uses: actions/setup-node@v2
+      with:
+        node-version: 16
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@searchspring'
+
     - name: Extract Variables
       id: variables
       shell: bash
@@ -139,14 +151,6 @@ runs:
         cat ./SnapAction*.json && \
         aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/ && \
         rm ./SnapAction*.json
-
-    - name: Setup Node
-      id: setup-node
-      uses: actions/setup-node@v2
-      with:
-        node-version: 16
-        registry-url: 'https://npm.pkg.github.com'
-        scope: '@searchspring'
 
     - name: Cache node_modules
       id: cache
@@ -323,10 +327,12 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers";
-        else
-          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+        if [ ${{ inputs.skipPublish }} = true ]; then
+          echo "skipping upload of 'dist' and 'public' directories to S3 due to skipPublish flag";
+        elif [ "${{ github.event_name }}" = "pull_request" ]; then \
+          echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
+        else \
+          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then \
             aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
             aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
             if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
@@ -344,11 +350,10 @@ runs:
                   aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.tag.outputs.tag }}
                 fi
               done;
-          fi
-        fi
-        if [ -f tests/lighthouse/runs/manifest.json ]; then
-          aws s3 sync --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}
-        fi
+          fi;
+
+          if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --cache-control max-age=1800 --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
+        fi;
 
     - name: Invalidate Files
       id: invalidation
@@ -357,33 +362,35 @@ runs:
       env:
         AWS_MAX_ATTEMPTS: 9
       run: |
-        if [ ${{ steps.variables.outputs.branch }} = production ]; then
-          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
-            aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
-          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
-            echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
-              do
-                echo "Invalidating files for siteId $siteId"
-                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/*"
-              done
-          fi
+        if [ ${{ inputs.skipInvalidation }} = true ]; then
+          echo "skipping invalidation due to skipInvalidation flag";
+        elif [ ${{ inputs.skipPublish }} = true ]; then
+          echo "skipping invalidation due to skipPublish flag";
+        elif [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "skipping invalidation for pull_request action triggers";
         else
-          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
-            aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
-            if [ -f tests/lighthouse/runs/manifest.json ]; then
-              aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"
+          if [ ${{ steps.variables.outputs.branch }} = production ]; then
+            if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+              aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
+            elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
+              echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
+                do
+                  echo "Invalidating files for siteId $siteId"
+                  aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/*"
+                done
             fi
-          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
-            echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
-              do
-                echo "Invalidating files for siteId $siteId on branch ${{ steps.variables.outputs.branch }}"
-                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ steps.variables.outputs.branch }}/*"
-                if [ -f tests/lighthouse/runs/manifest.json ]; then 
-                  aws cloudfront create-invalidation --distribution-id ${{inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/.lighthouse/${{ steps.variables.outputs.branch }}/manifest.json"
-                fi
-              done
+          else
+            if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+              aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
+            elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
+              echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
+                do
+                  echo "Invalidating files for siteId $siteId on branch ${{ steps.variables.outputs.branch }}"
+                  aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ steps.variables.outputs.branch }}/*"
+                done
+            fi
           fi
-        fi
+        fi;
 
     - run: |
         npx -y jjo \

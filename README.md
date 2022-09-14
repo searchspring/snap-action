@@ -39,6 +39,7 @@ jobs:
           skipTests: false
           skipLighthouse: false
           skipPublish: false
+          skipInvalidation: false
 ```
 
 ## Inputs
@@ -101,6 +102,9 @@ The `skipLighthouse` input parameter is optional. If set to `true`, the action w
 
 ### skipPublish
 The `skipPublish` input parameter is optional. If set to `true`, the action will not publish to the CDN.
+
+### skipInvalidation
+The `skipInvalidation` input parameter is optional. If set to `true`, the action will invalidate the CDN.
 
 ### secrets
 The `secrets` input parameter is required if the `searchspring.siteId` property of the project's package.json file is an object.
