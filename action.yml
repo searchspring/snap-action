@@ -136,10 +136,10 @@ runs:
           timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
           type=snap-action \
           data=$(npx -y jjo \
-            startTime=${{ steps.variables.outputs.startTime }} \
-            repository=${{ steps.variables.outputs.repository }} \
+            startTime="$startTime" \
+            repository="$repository" \
             repositoryOwner=${{ github.repository_owner }} \
-            branch=${{ steps.variables.outputs.branch }} \
+            branch="$branch" \
             baseRef=${{ github.base_ref }} \
             actor=${{ github.actor }} \
             eventName=${{ github.event_name }} \
@@ -147,7 +147,7 @@ runs:
             url='https://github.com/${{ github.repository_owner }}/$repository/actions/runs/${{ github.run_id }}' \
             runAttempt=${{ github.run_attempt }} \
           ) \
-        > SnapAction-${{ steps.variables.outputs.repository }}-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
+        > SnapAction-$repository-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
         cat ./SnapAction*.json && \
         aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/ && \
         rm ./SnapAction*.json
