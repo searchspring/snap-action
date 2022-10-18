@@ -144,7 +144,7 @@ runs:
             actor=${{ github.actor }} \
             eventName=${{ github.event_name }} \
             job=${{ github.job }} \
-            url='https://github.com/${{ github.repository_owner }}/$repository/actions/runs/${{ github.run_id }}' \
+            url="https://github.com/${{ github.repository_owner }}/$repository/actions/runs/${{ github.run_id }}" \
             runAttempt=${{ github.run_attempt }} \
           ) \
         > SnapAction-$repository-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
