@@ -136,10 +136,10 @@ runs:
           timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
           type=snap-action \
           data=$(npx -y jjo \
-            startTime='$startTime' \
-            repository='$repository' \
+            startTime=${{ steps.variables.outputs.startTime }} \
+            repository=${{ steps.variables.outputs.repository }} \
             repositoryOwner=${{ github.repository_owner }} \
-            branch='$branch' \
+            branch=${{ steps.variables.outputs.branch }} \
             baseRef=${{ github.base_ref }} \
             actor=${{ github.actor }} \
             eventName=${{ github.event_name }} \
