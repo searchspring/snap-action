@@ -311,6 +311,7 @@ runs:
           
     - name: Lighthouse Metrics
       id: lighthouse-metrics
+      if: ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}
       shell: bash
       run: |
         if [ ${{ inputs.skipLighthouse }} = false ]; then \
@@ -333,6 +334,7 @@ runs:
         
     - name: Copy Files to S3
       id: s3-upload
+      if: ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}
       shell: bash
       working-directory: repository
       run: |
@@ -366,6 +368,7 @@ runs:
 
     - name: Invalidate Files
       id: invalidation
+      if: ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}
       shell: bash
       working-directory: repository
       env:
