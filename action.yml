@@ -134,7 +134,7 @@ runs:
         echo "Using startTime: $startTime"
 
         
-        if [ ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }} = '' ]; then \
+        if [ '${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}' = '' ]; then \
           echo "skipping metrics due to missing aws credentials"; \
         else \
           npx -y jjo \
