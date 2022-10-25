@@ -133,26 +133,31 @@ runs:
         echo "::set-output name=startTime::$startTime"
         echo "Using startTime: $startTime"
 
-        npx -y jjo \
-          timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
-          type=snap-action \
-          data=$(npx -y jjo \
-            startTime="$startTime" \
-            repository="$repository" \
-            repositoryOwner=${{ github.repository_owner }} \
-            branch="$branch" \
-            baseRef=${{ github.base_ref }} \
-            actor=${{ github.actor }} \
-            eventName=${{ github.event_name }} \
-            job=${{ github.job }} \
-            pullRequestID=${{ github.event.pull_request.number }} \
-            url="https://github.com/${{ github.repository_owner }}/$repository/actions/runs/${{ github.run_id }}" \
-            runAttempt=${{ github.run_attempt }} \
-          ) \
-        > SnapAction-$repository-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
-        cat ./SnapAction*.json && \
-        aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/ && \
-        rm ./SnapAction*.json
+        
+        if [ ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }} = '' ]; then \
+          echo "skipping metrics due to missing aws credentials"; \
+        else \
+          npx -y jjo \
+            timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
+            type=snap-action \
+            data=$(npx -y jjo \
+              startTime="$startTime" \
+              repository="$repository" \
+              repositoryOwner=${{ github.repository_owner }} \
+              branch="$branch" \
+              baseRef=${{ github.base_ref }} \
+              actor=${{ github.actor }} \
+              eventName=${{ github.event_name }} \
+              job=${{ github.job }} \
+              pullRequestID=${{ github.event.pull_request.number }} \
+              url="https://github.com/${{ github.repository_owner }}/$repository/actions/runs/${{ github.run_id }}" \
+              runAttempt=${{ github.run_attempt }} \
+            ) \
+          > SnapAction-$repository-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
+          cat ./SnapAction*.json && \
+          aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/ && \
+          rm ./SnapAction*.json \
+        fi;
 
     - name: Cache node_modules
       id: cache
