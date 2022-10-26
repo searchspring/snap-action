@@ -5,6 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Snap Action
     steps:
+      - uses: actions/checkout@v2
       - name: Run composite snap-action
         uses: ./
         with:
