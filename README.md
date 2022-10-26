@@ -25,13 +25,13 @@ jobs:
         with:
         # required
           repository: ${{ env.GITHUB_REPOSITORY }}
+        # optional
           secretKey: ${{ secrets.WEBSITE_SECRET_KEY }}
           secrets: ${{ toJSON(secrets) }}
           aws-access-key-id: ${{ secrets.SNAPFU_AWS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.SNAPFU_AWS_SECRET_ACCESS_KEY }}
           aws-cloudfront-distribution-id: ${{secrets.SNAPFU_AWS_DISTRIBUTION_ID}}
           aws-s3-bucket-name: ${{secrets.SNAPFU_AWS_BUCKET}}
-        # optional
           aws-region: us-east-2
           NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
           GITHUB_BOT_TOKEN: ${{ secrets.MACHINE_TOKEN }}
