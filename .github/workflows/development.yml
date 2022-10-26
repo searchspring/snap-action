@@ -1,0 +1,12 @@
+on: [workflow_dispatch]
+
+jobs:
+  Publish:
+    runs-on: ubuntu-latest
+    name: Snap Action
+    steps:
+      - name: Run composite snap-action
+        uses: ./
+        with:
+        # required
+          repository: ${{ env.GITHUB_REPOSITORY }}
