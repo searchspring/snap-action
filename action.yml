@@ -64,15 +64,6 @@ runs:
         path: repository
         fetch-depth: 0
 
-    - name: Configure AWS credentials
-      id: configure-aws
-      if: ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ inputs.aws-access-key-id }}
-        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
-        aws-region: ${{ inputs.aws-region }}
-
     - name: Setup Node
       id: setup-node
       uses: actions/setup-node@v2
@@ -133,10 +124,22 @@ runs:
         echo "startTime=$startTime" >> $GITHUB_OUTPUT;
         echo "Using startTime: $startTime"
 
+        skipAWS='${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}'
+        echo "skipAWS=$skipAWS" >> $GITHUB_OUTPUT;
+        echo "Using skipAWS: $skipAWS"
+
+    - name: Configure AWS credentials
+      id: configure-aws
+      if: ${{ steps.variables.outputs.skipAWS }}
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
 
     - name: Start Metrics
       id: start-metrics
-      if: ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}
+      if: ${{ steps.variables.outputs.skipAWS }}
       shell: bash
       working-directory: repository
       run: |
@@ -311,7 +314,7 @@ runs:
           
     - name: Lighthouse Metrics
       id: lighthouse-metrics
-      if: ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}
+      if: ${{ steps.variables.outputs.skipAWS }}
       shell: bash
       run: |
         if [ ${{ inputs.skipLighthouse }} = false ]; then \
@@ -334,7 +337,7 @@ runs:
         
     - name: Copy Files to S3
       id: s3-upload
-      if: ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}
+      if: ${{ steps.variables.outputs.skipAWS }}
       shell: bash
       working-directory: repository
       run: |
@@ -368,7 +371,7 @@ runs:
 
     - name: Invalidate Files
       id: invalidation
-      if: ${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}
+      if: ${{ steps.variables.outputs.skipAWS }}
       shell: bash
       working-directory: repository
       env:
@@ -405,7 +408,7 @@ runs:
         fi;
 
     - run: |
-        if [ '${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}' == '' ]; then
+        if [ '${{ steps.variables.outputs.skipAWS }}' == '' ]; then
           echo "Skipping final metric because one of the following inputs has not been provided: aws-access-key-id, aws-secret-access-key, aws-cloudfront-distribution-id, aws-s3-bucket-name"
         else 
           npx -y jjo \
