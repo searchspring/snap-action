@@ -6,8 +6,8 @@ inputs:
     description: 'Repository of Snap implementation to publish'
     required: true
   secretKey:
-    description: 'Searchspring account secretKey. Can be obtained in the Searchspring Management Console'
-    required: true
+    description: 'Searchspring account secretKey. Can be obtained in the Searchspring Management Console. Required if package.json siteId is string format'
+    required: false
   skipTests:
     description: 'Skip running e2e tests'
     required: false
