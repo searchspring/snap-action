@@ -91,32 +91,32 @@ runs:
         else
           branch=`echo ${GITHUB_REF#refs/heads/}`;
         fi;
-        echo "::set-output name=branch::$branch"
-        echo "Using branch: $branch"
+        echo "branch=$branch" >> $GITHUB_OUTPUT;
+        echo "Using branch: $branch";
 
         secrets=`echo '${{ inputs.secrets }}' | jq -c .`;
-        echo "::set-output name=secrets::$secrets";
+        echo "secrets=$secrets" >> $GITHUB_OUTPUT;
         echo "Using secrets: $secrets";
 
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
-        echo "::set-output name=siteId_Type::$siteId_Type";
+        echo "siteId_Type=$siteId_Type" >> $GITHUB_OUTPUT;
 
         packageJSONVersion=`jq -r '.version' < package.json`;
-        echo "::set-output name=packageJSONVersion::$packageJSONVersion";
+        echo "packageJSONVersion=$packageJSONVersion" >> $GITHUB_OUTPUT;
 
         if [ $siteId_Type = 'string' ]; then \
           echo "siteId is a string"; \
           siteId=`jq -r '.searchspring.siteId' < package.json`; \
-          echo "::set-output name=siteId::$siteId"; \
+          echo "siteId=$siteId" >> $GITHUB_OUTPUT; \
           echo "Using siteId: $siteId"; \
         elif [ $siteId_Type = 'object' ]; then \
           echo "siteId is an object"; \
           siteIds=`jq -r '.searchspring.siteId | keys_unsorted | join(",")' < package.json`; \
-          echo "::set-output name=siteIds::$siteIds"; \
+          echo "siteIds=$siteIds" >> $GITHUB_OUTPUT; \
           echo "Using siteIds: $siteIds"; \
 
           siteNames=`jq -r '[.searchspring.siteId[].name] | join(",")' < package.json`; \
-          echo "::set-output name=siteNames::$siteNames"; \
+          echo "siteNames=$siteNames" >> $GITHUB_OUTPUT; \
           echo "Using siteNames: $siteNames"; \
         else \
           echo "Cannot determine project siteId from package.json"; \
@@ -124,13 +124,13 @@ runs:
         fi;
 
         pullRequestID=${{ github.event.pull_request.number }}
-        echo "::set-output name=pullRequestID::$pullRequestID"
+        echo "pullRequestID=$pullRequestID" >> $GITHUB_OUTPUT;
         echo "Using pullRequestID: $pullRequestID"
         repository=`git config --get remote.origin.url | grep -Eo "[^\/]+$" | sed 's/.git//g'`
-        echo "::set-output name=repository::$repository"
+        echo "repository=$repository" >> $GITHUB_OUTPUT;
         echo "Using repository: $repository"
         startTime=`date -u +%s`
-        echo "::set-output name=startTime::$startTime"
+        echo "startTime=$startTime" >> $GITHUB_OUTPUT;
         echo "Using startTime: $startTime"
 
 
@@ -261,8 +261,8 @@ runs:
           echo 'no pull request ID found'; \
         elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
           npm run lighthouse -- --throttling.cpuSlowdownMultiplier=2.2 && \
-          echo "::set-output name=scores::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" &&  \
-          echo "::set-output name=report::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" || exit 1; \
+          echo "scores=$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" >> $GITHUB_OUTPUT; \
+          echo "report=$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" >> $GITHUB_OUTPUT || exit 1; \
         else \
           echo 'lighthouserc.js file not found in repository, skipping lighthouse tests'; \
         fi
@@ -285,14 +285,14 @@ runs:
                 git tag -a "$newTag" -m "tagged from snap-action"
                 git push origin $newTag
                 tag=`echo "$newTag"`;
-                echo "::set-output name=tag::$tag";
+                echo "tag=$tag" >> $GITHUB_OUTPUT;
               fi
           else
               # tag doesn't exist, create it from the package.json version
               git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
               git push origin ${{ steps.variables.outputs.packageJSONVersion }}
               tag=`echo "${{ steps.variables.outputs.packageJSONVersion }}"`;
-              echo "::set-output name=tag::$tag";
+              echo "tag=$tag" >> $GITHUB_OUTPUT;
           fi
         fi
 
