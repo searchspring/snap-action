@@ -128,6 +128,14 @@ runs:
         echo "skipAWS=$skipAWS" >> $GITHUB_OUTPUT;
         echo "Using skipAWS: $skipAWS"
 
+        echo "github.event.pull_request.number: ${{ github.event.pull_request.number }}"
+        echo "github.event.number: ${{ github.event.number }}"
+        echo "PR_NUMBER: $PR_NUMBER"
+        echo "github.event.issue.number: ${{ github.event.issue.number }}"
+        echo "github.ref: ${{ github.ref }}"
+        echo "github.ref: ${{ github.ref_name }}"
+        echo "toJSON github: ${{ toJSON(github) }}"
+
     - name: Configure AWS credentials
       id: configure-aws
       if: ${{ steps.variables.outputs.skipAWS }}
