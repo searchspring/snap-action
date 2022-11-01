@@ -438,7 +438,7 @@ runs:
               eventName=${{ github.event_name }} \
               job=${{ github.job }} \
               sha_before=${{ github.event.before }} \
-              sha=${{ github.event.pull_request.base.repo.sha }} \
+              sha=${{ github.event.pull_request.base.sha }} \
               pullRequestID=${{ github.event.pull_request.number }} \
               url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
               runAttempt=${{ github.run_attempt }} \
