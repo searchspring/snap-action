@@ -128,18 +128,6 @@ runs:
         echo "skipAWS=$skipAWS" >> $GITHUB_OUTPUT;
         echo "Using skipAWS: $skipAWS"
 
-        echo "github.event.pull_request.number: ${{ github.event.pull_request.number }}"
-        echo "github.event.number: ${{ github.event.number }}"
-        echo "PR_NUMBER: $PR_NUMBER"
-        echo "github.event.issue.number: ${{ github.event.issue.number }}"
-        echo "github.ref: ${{ github.ref }}"
-        echo "github.ref: ${{ github.ref_name }}"
-        echo "GITHUB_SHA: $GITHUB_SHA"
-        echo "GITHUB_BRANCH: $GITHUB_BRANCH"
-        echo "toJSON github: ${{ toJSON(github) }}"
-        echo "-----------------------------"
-        
-
     - name: Configure AWS credentials
       id: configure-aws
       if: ${{ steps.variables.outputs.skipAWS }}
@@ -171,6 +159,7 @@ runs:
             url="https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}" \
             runAttempt=${{ github.run_attempt }} \
             sha_before=${{ github.event.before }} \
+            sha_pr_head=${{ github.event.pull_request.head.sha }} \
           ) \
         > SnapAction-$repository-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
         cat ./SnapAction*.json && \
@@ -438,6 +427,7 @@ runs:
               eventName=${{ github.event_name }} \
               job=${{ github.job }} \
               sha_before=${{ github.event.before }} \
+              sha_pr_head=${{ github.event.pull_request.head.sha }} \
               sha=${{ github.event.pull_request.base.sha }} \
               pullRequestID=${{ github.event.pull_request.number }} \
               url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
