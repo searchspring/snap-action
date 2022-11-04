@@ -410,7 +410,11 @@ runs:
           fi
         fi;
 
-    - run: |
+    - name: 'metrics'
+      id: metrics
+      shell: bash
+      if: always()
+      run: |
         echo "got here1";
         echo "got here2";
         echo "got here3";
@@ -420,7 +424,5 @@ runs:
         echo "got here5";
         sleep 5;
         echo "got here6";
-      id: metrics
-      shell: bash
-      if: always()
+        
 
