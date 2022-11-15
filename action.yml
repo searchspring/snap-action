@@ -128,6 +128,9 @@ runs:
         echo "skipAWS=$skipAWS" >> $GITHUB_OUTPUT;
         echo "Using skipAWS: $skipAWS"
 
+        echo "runnerName=$RUNNER_NAME" >> $GITHUB_OUTPUT;
+        echo "Using runnerName: $RUNNER_NAME"
+
     - name: Configure AWS credentials
       id: configure-aws
       if: ${{ steps.variables.outputs.skipAWS }}
@@ -137,35 +140,25 @@ runs:
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
         aws-region: ${{ inputs.aws-region }}
 
-    - name: Start Metrics
+    - name: Updater Start Metrics
       id: start-metrics
-      if: ${{ steps.variables.outputs.skipAWS }}
       shell: bash
       working-directory: repository
       run: |
-        npx -y jjo \
-          timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
-          type=snap-action \
-          data=$(npx -y jjo \
-            startTime="${{ steps.variables.outputs.startTime }}" \
-            repository="${{ steps.variables.outputs.repository }}" \
-            repositoryOwner=${{ github.repository_owner }} \
-            branch="${{ steps.variables.outputs.branch }}" \
-            baseRef=${{ github.base_ref }} \
-            actor=${{ github.actor }} \
-            eventName=${{ github.event_name }} \
-            job=${{ github.job }} \
-            pullRequestID=${{ github.event.pull_request.number }} \
-            url="https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}" \
-            runAttempt=${{ github.run_attempt }} \
-            sha_before=${{ github.event.before }} \
-            sha_after=${{ github.event.after }} \
-            sha_pr_head=${{ github.event.pull_request.head.sha }} \
-          ) \
-        > SnapAction-$repository-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
-        cat ./SnapAction*.json && \
-        aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/ && \
-        rm ./SnapAction*.json
+        node scripts/metrics/updater.js \
+          --runAttempt "${{ github.run_attempt }}" \
+          --actor "${{ github.actor }}" \
+          --repository "${{ steps.variables.outputs.repository }}" \
+          --branch "${{ steps.variables.outputs.branch }}" \
+          --eventName "${{ github.event_name }}" \
+          --pullRequestID "${{ github.event.pull_request.number }}" \
+          --startTime "${{ steps.variables.outputs.startTime }}" \
+          --conclusion "" \
+          --duration "" \
+          --failedStep "" \
+          --commitMessage "${{ github.event.head_commit.message }}" \
+          --url "https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}" \
+          --secrets-ci '${{ steps.variables.outputs.secrets }}';
 
     - name: Cache node_modules
       id: cache
