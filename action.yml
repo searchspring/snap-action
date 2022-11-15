@@ -141,10 +141,13 @@ runs:
         aws-region: ${{ inputs.aws-region }}
 
     - name: Updater Start Metrics
+      description: send start time metrics to the Snapp Updater tool (only when running updates)
       id: start-metrics
+      if: ${{ steps.variables.outputs.runnerName != 'Hosted Agent' }}
       shell: bash
       working-directory: repository
       run: |
+        # Start time metric used in snapp-updater action status, Should only run on self-hosted
         node scripts/metrics/updater.js \
           --runAttempt "${{ github.run_attempt }}" \
           --actor "${{ github.actor }}" \
