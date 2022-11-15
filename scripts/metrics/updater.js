@@ -24,8 +24,8 @@ export const BRANCH_PREFIX = 'update/';
             console.log("Could not parse secrets. Please provide a 'secrets' parameter. Example: `secrets: ${{ toJSON(secrets) }}`");
         }
 
-        const ACTION_TOKEN = secrets['UPDATER_TOKEN'];
-        const ACTION_URL = secrets['UPDATER_URL'];
+        const UPDATER_TOKEN = secrets['UPDATER_TOKEN'];
+        const UPDATER_URL = secrets['UPDATER_URL'];
         
         let version;
         if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
@@ -35,11 +35,11 @@ export const BRANCH_PREFIX = 'update/';
         }
 
         if (!version) {
-            console.log(`NOT Sending Updater Metrics!`);
-            exit(0); //TODO: change to 1 if it's possible to detect if action is running on self-hosted
+            console.log(`NOT Sending Updater Metrics - no version found!`);
+            exit(1);
         }
 
-        if (!ACTION_TOKEN) {
+        if (!UPDATER_TOKEN) {
             console.log(`NOT Sending Updater Metrics - no token found!`);
             exit(1);
         }
@@ -70,11 +70,11 @@ export const BRANCH_PREFIX = 'update/';
         console.log(`Sending Updater Metrics:`);
         console.log(`${data}\n`);
 
-        const response = await fetch(ACTION_URL, {
+        const response = await fetch(UPDATER_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': ACTION_TOKEN
+                'Authorization': UPDATER_TOKEN
             },
             body: data
         });

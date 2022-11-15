@@ -141,7 +141,6 @@ runs:
         aws-region: ${{ inputs.aws-region }}
 
     - name: Updater Start Metrics
-      description: send start time metrics to the Snapp Updater tool (only when running updates)
       id: start-metrics
       if: ${{ steps.variables.outputs.runnerName != 'Hosted Agent' }}
       shell: bash
