@@ -79,6 +79,8 @@ const BRANCH_PREFIX = 'update/';
         });
 
         const responseData = response.json();
+        console.log("responseData:")
+        console.log(responseData);
 
         // when response is received
         if (response.status === 200 && !responseData.success) {
