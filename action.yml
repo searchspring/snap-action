@@ -78,7 +78,7 @@ runs:
       working-directory: repository
       run: |
         if [ "${{ github.event_name }}" = "pull_request" ]; then \
-          branch=${{ github.head_ref }};
+          branch=`echo "${{ github.head_ref }}"`;
         else
           branch=`echo ${GITHUB_REF#refs/heads/}`;
         fi;
