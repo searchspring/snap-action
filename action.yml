@@ -408,10 +408,12 @@ runs:
         duration="$(($(date -u +%s)-${{ steps.variables.outputs.startTime }}))"
         echo "duration is $duration"
 
-        endTimeTest=$(date -u +%d)
+        endTimeTest=$(date -u +%s)
         echo "endTimeTest is $endTimeTest"
+
         startTimeTest=${{ steps.variables.outputs.startTime }}
         echo "startTimeTest is $startTimeTest"
+
         resultTest=$(($endTimeTest-$startTimeTest))
         echo "resultTest is $resultTest"
 
