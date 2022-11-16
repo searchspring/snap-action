@@ -73,21 +73,23 @@ const BRANCH_PREFIX = 'update/';
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': UPDATER_TOKEN,
-                'ngrok-skip-browser-warning': '1'
+                // 'ngrok-skip-browser-warning': '1'
             },
             body: JSON.stringify(data)
         });
 
         const responseData = await response.json();
-        console.log("responseData:")
-        console.log(responseData);
 
         // when response is received
-        if (response.status === 200 && !responseData.success) {
+        if (response.status === 200 && responseData.success) {
+            // success!
+            console.log(`Snapp Updater successful response: `);
+            console.log(responseData.message);
+        } else if (response.status === 200 && !responseData.success) {
             console.log(`Snapp Updater rejected payload!`);
             console.log(responseData.message);
             exit(1);
-        } else {
+        } else if (response.status !== 200) {
             console.log(`Could not send metrics to Updater!`);
             console.log(`Response status: ${response.status}, ${response.statusText}`)
             exit(1);
