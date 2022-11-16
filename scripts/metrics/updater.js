@@ -69,6 +69,7 @@ const BRANCH_PREFIX = 'update/';
 
         const response = await https({
             hostname: UPDATER_URL,
+            port: 443,
             path: `/api/action/${startTime ? 'start' : 'conclusion'}`,
             method: 'POST',
             headers: {
