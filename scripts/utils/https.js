@@ -11,6 +11,7 @@ function https({ body, ...options }) {
                 let resBody = Buffer.concat(chunks);
                 switch (res.headers['content-type']) {
                     case 'application/json':
+                    case 'application/json; charset=utf-8':
                         resBody = JSON.parse(resBody);
                         break;
                 }
