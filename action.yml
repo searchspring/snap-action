@@ -68,7 +68,7 @@ runs:
       id: setup-node
       uses: actions/setup-node@v2
       with:
-        node-version: 18
+        node-version: 16
         registry-url: 'https://npm.pkg.github.com'
         scope: '@searchspring'
 
