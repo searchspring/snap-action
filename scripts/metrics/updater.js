@@ -16,9 +16,12 @@ const BRANCH_PREFIX = 'update/';
         const { runAttempt, actor, repository, branch, eventName, pullRequestID, startTime, conclusion, duration, failedStep, commitMessage, url } = args;
         let secrets;
         try {
+            console.log(args)
+            console.log(args['secrets-ci'])
             secrets = JSON.parse(args['secrets-ci']);
         } catch (e) {
             console.log("Could not parse secrets. Please provide a 'secrets' parameter. Example: `secrets: ${{ toJSON(secrets) }}`");
+            console.log(e)
         }
 
         const UPDATER_TOKEN = secrets['UPDATER_TOKEN'];
