@@ -144,7 +144,6 @@ runs:
       id: start-metrics
       if: ${{ steps.variables.outputs.runnerName != 'Hosted Agent' }}
       shell: bash
-      working-directory: repository
       run: |
         # Start time metric used in snapp-updater action status, Should only run on self-hosted
         node scripts/metrics/updater.js \
