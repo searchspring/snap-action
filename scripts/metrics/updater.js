@@ -1,6 +1,6 @@
-const fsp = require('fs').promises;
 const exit = require('process').exit;
 const getCliArgs = require('../utils/getCliArgs');
+const https = require('../utils/https');
 
 const BRANCH_PREFIX = 'update/';
 (async function () {
@@ -8,7 +8,7 @@ const BRANCH_PREFIX = 'update/';
         const now = new Date()
         const args = getCliArgs(['runAttempt', 'actor', 'repository', 'branch', 'eventName', 'pullRequestID', 'startTime', 'conclusion', 'duration', 'failedStep', 'commitMessage', 'url', 'secrets-ci']);
 
-        if(!args.siteId_Type === 'object' && (!args.siteIds || !args.siteNames || !args['secrets-ci'])) {
+        if (!args.siteId_Type === 'object' && (!args.siteIds || !args.siteNames || !args['secrets-ci'])) {
             console.log("Verify script requires 'siteId', 'repository' and 'secrets-ci' parameter")
             exit(1);
         }
@@ -23,7 +23,7 @@ const BRANCH_PREFIX = 'update/';
 
         const UPDATER_TOKEN = secrets['UPDATER_TOKEN'];
         const UPDATER_URL = secrets['UPDATER_URL'];
-        
+
         let version;
         if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
             version = commitMessage.split(BRANCH_PREFIX).pop();
@@ -67,31 +67,29 @@ const BRANCH_PREFIX = 'update/';
         console.log(`Sending Updater Metrics:`);
         console.log(data);
 
-        const endpoint = `${UPDATER_URL}/api/action/${startTime ? 'start' : 'conclusion'}`;
-        const response = await fetch(endpoint, {
+        const response = await https({
+            hostname: UPDATER_URL,
+            path: `/api/action/${startTime ? 'start' : 'conclusion'}`,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': UPDATER_TOKEN,
-                // 'ngrok-skip-browser-warning': '1'
             },
             body: JSON.stringify(data)
-        });
-
-        const responseData = await response.json();
+        })
 
         // when response is received
-        if (response.status === 200 && responseData.success) {
+        if (response.status === 200 && response.data.success) {
             // success!
             console.log(`Snapp Updater successful response: `);
-            console.log(responseData.message);
-        } else if (response.status === 200 && !responseData.success) {
+            console.log(response.data.message);
+        } else if (response.status === 200 && !response.data.success) {
             console.log(`Snapp Updater rejected payload!`);
-            console.log(responseData.message);
+            console.log(response.data.message);
             exit(1);
         } else if (response.status !== 200) {
             console.log(`Could not send metrics to Updater!`);
-            console.log(`Response status: ${response.status}, ${response.statusText}`)
+            console.log(`Response status: ${response.status}`)
             exit(1);
         }
     } catch (err) {
@@ -100,5 +98,3 @@ const BRANCH_PREFIX = 'update/';
         exit(1);
     }
 })();
-
-
