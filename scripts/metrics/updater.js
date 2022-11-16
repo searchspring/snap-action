@@ -2,7 +2,7 @@ const fsp = require('fs').promises;
 const exit = require('process').exit;
 const getCliArgs = require('../utils/getCliArgs');
 
-export const BRANCH_PREFIX = 'update/';
+const BRANCH_PREFIX = 'update/';
 
 (async function () {
     try {
