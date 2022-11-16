@@ -406,7 +406,8 @@ runs:
         fi;
     
     - run: |
-        duration=$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} );
+        start=${{ steps.variables.outputs.startTime }};
+        duration=$(expr $(date -u +%s) - $start );
 
         # Conclusion metric used in snapp-updater action status, Should only run on self-hosted
         if [ '${{ steps.variables.outputs.runnerName }}' != 'Hosted Agent' ]; then
