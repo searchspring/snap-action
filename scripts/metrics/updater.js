@@ -3,7 +3,6 @@ const exit = require('process').exit;
 const getCliArgs = require('../utils/getCliArgs');
 
 const BRANCH_PREFIX = 'update/';
-
 (async function () {
     try {
         const now = new Date()
@@ -25,11 +24,12 @@ const BRANCH_PREFIX = 'update/';
         const UPDATER_TOKEN = secrets['UPDATER_TOKEN'];
         const UPDATER_URL = secrets['UPDATER_URL'];
         
+        console.log(`got branch: ${branch}`)
         let version;
         if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
-            version = commitMessage.split(BRANCH_PREFIX)[1];
+            version = commitMessage.split(BRANCH_PREFIX).pop();
         } else if (branch.includes(BRANCH_PREFIX)) {
-            version = branch.split(BRANCH_PREFIX)[0];
+            version = branch.split(BRANCH_PREFIX).pop();
         }
 
         if (!version) {
