@@ -405,6 +405,9 @@ runs:
         fi;
     
     - run: |
+        duration=$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} )
+        echo "duration is $duration"
+        
         if [ '${{ steps.variables.outputs.runnerName }}' != 'Hosted Agent' ]; then
           # Conclusion metric used in snapp-updater action status, Should only run on self-hosted
           node scripts/metrics/updater.js \
@@ -416,7 +419,7 @@ runs:
             --pullRequestID "${{ github.event.pull_request.number }}" \
             --startTime "" \
             --conclusion "${{ github.action_status }}" \
-            --duration $(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} ) \
+            --duration "$duration" \
             --failedStep "${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.tag.conclusion == 'Failure' && 'tag' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || steps.start-metrics.conclusion == 'Failure' && 'start-metrics' || ''}}" \
             --commitMessage "${{ github.event.head_commit.message }}" \
             --url "https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}" \
@@ -431,7 +434,7 @@ runs:
             type=snap-action \
             data=$(npx -y jjo \
               conclusion=${{ github.action_status }} \
-              duration=$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} ) \
+              duration=$duration \
               repository=${{ steps.variables.outputs.repository }} \
               repositoryOwner=${{ github.repository_owner }} \
               branch=${{ steps.variables.outputs.branch }} \
