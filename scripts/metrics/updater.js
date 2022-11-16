@@ -65,7 +65,7 @@ const BRANCH_PREFIX = 'update/';
         }
 
         console.log(`Sending Updater Metrics:`);
-        console.log(`${data}\n`);
+        console.log(data);
 
         const response = await fetch(UPDATER_URL, {
             method: 'POST',
@@ -73,7 +73,7 @@ const BRANCH_PREFIX = 'update/';
                 'Content-Type': 'application/json',
                 'Authorization': UPDATER_TOKEN
             },
-            body: data
+            body: JSON.stringify(data)
         });
 
         const responseData = response.json();
