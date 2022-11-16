@@ -24,7 +24,6 @@ const BRANCH_PREFIX = 'update/';
         const UPDATER_TOKEN = secrets['UPDATER_TOKEN'];
         const UPDATER_URL = secrets['UPDATER_URL'];
         
-        console.log(`got branch: ${branch}`)
         let version;
         if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
             version = commitMessage.split(BRANCH_PREFIX).pop();
