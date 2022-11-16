@@ -82,33 +82,32 @@ runs:
         else
           branch=`echo ${GITHUB_REF#refs/heads/}`;
         fi;
-        echo "branch is: $branch";
-        echo "branch=$branch" >> $env:GITHUB_OUTPUT;
+        echo "::set-output name=branch::$branch";
         echo "Using branch: $branch";
 
         secrets=`echo '${{ inputs.secrets }}' | jq -c .`;
-        echo "secrets=$secrets" >> $env:GITHUB_OUTPUT;
+        echo "::set-output name=secrets::$secrets";
         echo "Using secrets: $secrets";
 
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
-        echo "siteId_Type=$siteId_Type" >> $env:GITHUB_OUTPUT;
+        echo "::set-output name=siteId_Type::$siteId_Type";
 
         packageJSONVersion=`jq -r '.version' < package.json`;
-        echo "packageJSONVersion=$packageJSONVersion" >> $env:GITHUB_OUTPUT;
+        echo "::set-output name=packageJSONVersion::$packageJSONVersion";
 
         if [ $siteId_Type = 'string' ]; then \
           echo "siteId is a string"; \
           siteId=`jq -r '.searchspring.siteId' < package.json`; \
-          echo "siteId=$siteId" >> $env:GITHUB_OUTPUT; \
+          echo "::set-output name=siteId::$siteId"; \
           echo "Using siteId: $siteId"; \
         elif [ $siteId_Type = 'object' ]; then \
           echo "siteId is an object"; \
           siteIds=`jq -r '.searchspring.siteId | keys_unsorted | join(",")' < package.json`; \
-          echo "siteIds=$siteIds" >> $env:GITHUB_OUTPUT; \
+          echo "::set-output name=siteIds::$siteIds"; \
           echo "Using siteIds: $siteIds"; \
 
           siteNames=`jq -r '[.searchspring.siteId[].name] | join(",")' < package.json`; \
-          echo "siteNames=$siteNames" >> $env:GITHUB_OUTPUT; \
+          echo "::set-output name=siteNames::$siteNames"; \
           echo "Using siteNames: $siteNames"; \
         else \
           echo "Cannot determine project siteId from package.json"; \
@@ -116,25 +115,25 @@ runs:
         fi;
 
         pullRequestID=${{ github.event.pull_request.number }}
-        echo "pullRequestID=$pullRequestID" >> $env:GITHUB_OUTPUT;
+        echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
         repository=`git config --get remote.origin.url | grep -Eo "[^\/]+$" | sed 's/.git//g'`
-        echo "repository=$repository" >> $env:GITHUB_OUTPUT;
+        echo "::set-output name=repository::$repository"
         echo "Using repository: $repository"
         startTime=`date -u +%s`
-        echo "startTime=$startTime" >> $env:GITHUB_OUTPUT;
+        echo "::set-output name=startTime::$startTime"
         echo "Using startTime: $startTime"
 
         skipAWS='${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}'
-        echo "skipAWS=$skipAWS" >> $env:GITHUB_OUTPUT;
+        echo "::set-output name=skipAWS::$skipAWS";
         echo "Using skipAWS: $skipAWS"
 
-        echo "runnerName=$RUNNER_NAME" >> $env:GITHUB_OUTPUT;
+        echo "::set-output name=runnerName::$RUNNER_NAME";
         echo "Using runnerName: $RUNNER_NAME"
 
     - name: Configure AWS credentials
       id: configure-aws
-      if: ${{ env.skipAWS }}
+      if: ${{ steps.variables.outputs.skipAWS }}
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
@@ -143,24 +142,24 @@ runs:
 
     - name: Updater Start Metrics
       id: start-metrics
-      if: ${{ env.runnerName != 'Hosted Agent' }}
+      if: ${{ steps.variables.outputs.runnerName != 'Hosted Agent' }}
       shell: bash
       run: |
         # Start time metric used in snapp-updater action status, Should only run on self-hosted
         node scripts/metrics/updater.js \
           --runAttempt "${{ github.run_attempt }}" \
           --actor "${{ github.actor }}" \
-          --repository "${{ env.repository }}" \
-          --branch "${{ env.branch }}" \
+          --repository "${{ steps.variables.outputs.repository }}" \
+          --branch "${{ steps.variables.outputs.branch }}" \
           --eventName "${{ github.event_name }}" \
           --pullRequestID "${{ github.event.pull_request.number }}" \
-          --startTime "${{ env.startTime }}" \
+          --startTime "${{ steps.variables.outputs.startTime }}" \
           --conclusion "" \
           --duration "" \
           --failedStep "" \
           --commitMessage "${{ github.event.head_commit.message }}" \
-          --url "https://github.com/${{ github.repository_owner }}/${{ env.repository }}/actions/runs/${{ github.run_id }}" \
-          --secrets-ci '${{ env.secrets }}';
+          --url "https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}" \
+          --secrets-ci '${{ steps.variables.outputs.secrets }}';
 
     - name: Cache node_modules
       id: cache
@@ -181,13 +180,13 @@ runs:
       shell: bash
       run: |
         node scripts/smc/verify.js \
-          --siteId_Type "${{ env.siteId_Type }}" \
-          --siteId "${{ env.siteId }}" \
-          --repository "${{ env.repository }}" \
+          --siteId_Type "${{ steps.variables.outputs.siteId_Type }}" \
+          --siteId "${{ steps.variables.outputs.siteId }}" \
+          --repository "${{ steps.variables.outputs.repository }}" \
           --secretKey "${{ inputs.secretKey }}" \
-          --siteIds "${{ env.siteIds }}" \
-          --siteNames "${{ env.siteNames }}" \
-          --secrets-ci '${{ env.secrets }}';
+          --siteIds "${{ steps.variables.outputs.siteIds }}" \
+          --siteNames "${{ steps.variables.outputs.siteNames }}" \
+          --secrets-ci '${{ steps.variables.outputs.secrets }}';
 
     - name: Install Packages
       id: install
@@ -223,10 +222,10 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ "${{ env.pullRequestID }}" = "" ]; then \
+        if [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
           if [ ${{ inputs.skipTests }} = true ]; then \
             echo 'skipping tests due to skipTests flag'; 
-          elif [ ${{ env.branch }} = production ]; then \
+          elif [ ${{ steps.variables.outputs.branch }} = production ]; then \
             echo "skipping tests for push triggers to production"; \
           else \
             npm run test; \
@@ -240,13 +239,13 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ ${{ env.branch }} = production ]; then \
+        if [ ${{ steps.variables.outputs.branch }} = production ]; then \
           npm install -g snapfu
           snapfu recs sync \
             --secret-key "${{ inputs.secretKey }}" \
-            --secrets-ci '${{ env.secrets }}';
+            --secrets-ci '${{ steps.variables.outputs.secrets }}';
         else \
-          echo 'skipping snapfu recs sync for ${{ env.branch }} branch'; \
+          echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
         fi; \
     
     - name: Lighthouse Tests
@@ -258,12 +257,12 @@ runs:
       run: |
         if [ ${{ inputs.skipLighthouse }} = true ]; then \
           echo 'skipping lighthouse tests'; \
-        elif [ "${{ env.pullRequestID }}" = "" ]; then \
+        elif [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
           echo 'no pull request ID found'; \
         elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
           npm run lighthouse -- --throttling.cpuSlowdownMultiplier=2.2 && \
-          echo "scores=$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" >> $env:GITHUB_OUTPUT; \
-          echo "report=$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" >> $env:GITHUB_OUTPUT || exit 1; \
+          echo "::set-output name=scores::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" &&  \
+          echo "::set-output name=report::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" || exit 1; \
         else \
           echo 'lighthouserc.js file not found in repository, skipping lighthouse tests'; \
         fi
@@ -273,27 +272,27 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ ${{ env.branch }} = production ]; then
+        if [ ${{ steps.variables.outputs.branch }} = production ]; then
           git config user.name searchspring-machine
           git config user.email machine@searchspring.com
 
-          if [ $(git tag -l "${{ env.packageJSONVersion }}") ]; then
+          if [ $(git tag -l "${{ steps.variables.outputs.packageJSONVersion }}") ]; then
               # tag exist, use scripts/tag/increment.js to bump/add suffix version
-              echo "Tag ${{ env.packageJSONVersion }} already exists."
-              newTag=$(node ./../scripts/tag/increment.js --tags "$(git tag -l '${{ env.packageJSONVersion }}*')")
-              if [ "${{ env.packageJSONVersion }}" != "$newTag" ]; then
+              echo "Tag ${{ steps.variables.outputs.packageJSONVersion }} already exists."
+              newTag=$(node ./../scripts/tag/increment.js --tags "$(git tag -l '${{ steps.variables.outputs.packageJSONVersion }}*')")
+              if [ "${{ steps.variables.outputs.packageJSONVersion }}" != "$newTag" ]; then
                 echo "Creating tag $newTag"
                 git tag -a "$newTag" -m "tagged from snap-action"
                 git push origin $newTag
                 tag=`echo "$newTag"`;
-                echo "tag=$tag" >> $env:GITHUB_OUTPUT;
+                echo "::set-output name=tag::$tag";
               fi
           else
               # tag doesn't exist, create it from the package.json version
-              git tag -a "${{ env.packageJSONVersion }}" -m "tagged from snap-action"
-              git push origin ${{ env.packageJSONVersion }}
-              tag=`echo "${{ env.packageJSONVersion }}"`;
-              echo "tag=$tag" >> $env:GITHUB_OUTPUT;
+              git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
+              git push origin ${{ steps.variables.outputs.packageJSONVersion }}
+              tag=`echo "${{ steps.variables.outputs.packageJSONVersion }}"`;
+              echo "::set-output name=tag::$tag";
           fi
         fi
 
@@ -304,25 +303,25 @@ runs:
         github-token: ${{ inputs.GITHUB_BOT_TOKEN || github.token }}
         script: |
           ("${{ steps.lighthouse.outputs.scores }}" != '') && ("${{ inputs.LHCI_GITHUB_APP_TOKEN }}" == '') && github.rest.issues.createComment({
-            issue_number: ${{ env.pullRequestID || 0 }},
+            issue_number: ${{ steps.variables.outputs.pullRequestID || 0 }},
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ env.siteId }}/.lighthouse/${{ env.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
+            body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
           })
           
     - name: Lighthouse Metrics
       id: lighthouse-metrics
-      if: ${{ env.skipAWS }}
+      if: ${{ steps.variables.outputs.skipAWS }}
       shell: bash
       run: |
         if [ ${{ inputs.skipLighthouse }} = false ]; then \
           if [ "${{ github.event_name }}" = "pull_request" ]; then \
             node scripts/metrics/lighthouse.js \
-              --siteId "${{ env.siteId }}" \
-              --branch "${{ env.branch }}" \
+              --siteId "${{ steps.variables.outputs.siteId }}" \
+              --branch "${{ steps.variables.outputs.branch }}" \
               --repositoryOwner "${{ github.repository_owner }}" \
-              --repository "${{ env.repository }}" \
-              --issueNumber "${{ env.pullRequestID }}";
+              --repository "${{ steps.variables.outputs.repository }}" \
+              --issueNumber "${{ steps.variables.outputs.pullRequestID }}";
           else \
             echo "Skipping lighthouse metrics generation due to non pull_request event"; \
           fi;
@@ -335,7 +334,7 @@ runs:
         
     - name: Copy Files to S3
       id: s3-upload
-      if: ${{ env.skipAWS }}
+      if: ${{ steps.variables.outputs.skipAWS }}
       shell: bash
       working-directory: repository
       run: |
@@ -344,19 +343,19 @@ runs:
         elif [ "${{ github.event_name }}" = "pull_request" ]; then \
           echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
         else \
-          if [ '${{ env.siteId_Type }}' = 'string' ]; then \
-            aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ env.siteId }}/${{ env.branch }}
-            aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ env.siteId }}/${{ env.branch }}
+          if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then \
+            aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+            aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
             if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
-              aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ env.siteId }}/${{ steps.tag.outputs.tag }}
-              aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ env.siteId }}/${{ steps.tag.outputs.tag }}
+              aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}
+              aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.tag.outputs.tag }}
             fi
-          elif [ '${{ env.siteId_Type }}' = 'object' ]; then
-            echo "${{ env.siteIds }}" | tr , '\n' | while read siteId
+          elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
+            echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
               do
                 echo "Copying files to S3 for siteId $siteId"
-                aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ env.branch }}
-                aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ env.branch }}
+                aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
+                aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.variables.outputs.branch }}
                 if [ "${{ steps.tag.outputs.tag }}" != "" ]; then
                   aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.tag.outputs.tag }}
                   aws s3 sync --cache-control max-age=1800 --acl public-read public s3://${{ inputs.aws-s3-bucket-name }}/$siteId/${{ steps.tag.outputs.tag }}
@@ -364,12 +363,12 @@ runs:
               done;
           fi;
 
-          if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --cache-control max-age=1800 --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ env.siteId }}/.lighthouse/${{ env.branch }}; fi;
+          if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --cache-control max-age=1800 --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
         fi;
 
     - name: Invalidate Files
       id: invalidation
-      if: ${{ env.skipAWS }}
+      if: ${{ steps.variables.outputs.skipAWS }}
       shell: bash
       working-directory: repository
       env:
@@ -382,40 +381,40 @@ runs:
         elif [ "${{ github.event_name }}" = "pull_request" ]; then
           echo "skipping invalidation for pull_request action triggers";
         else
-          if [ ${{ env.branch }} = production ]; then
-            if [ '${{ env.siteId_Type }}' = 'string' ]; then
-              aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ env.siteId }}/*"
-            elif [ '${{ env.siteId_Type }}' = 'object' ]; then
-              echo "${{ env.siteIds }}" | tr , '\n' | while read siteId
+          if [ ${{ steps.variables.outputs.branch }} = production ]; then
+            if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+              aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/*"
+            elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
+              echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
                 do
                   echo "Invalidating files for siteId $siteId"
                   aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/*"
                 done
             fi
           else
-            if [ '${{ env.siteId_Type }}' = 'string' ]; then
-              aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ env.siteId }}/${{ env.branch }}/*"
-            elif [ '${{ env.siteId_Type }}' = 'object' ]; then
-              echo "${{ env.siteIds }}" | tr , '\n' | while read siteId
+            if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+              aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
+            elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
+              echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
                 do
-                  echo "Invalidating files for siteId $siteId on branch ${{ env.branch }}"
-                  aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ env.branch }}/*"
+                  echo "Invalidating files for siteId $siteId on branch ${{ steps.variables.outputs.branch }}"
+                  aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ steps.variables.outputs.branch }}/*"
                 done
             fi
           fi
         fi;
     
     - run: |
-        start=${{ env.startTime }};
+        start=${{ steps.variables.outputs.startTime }};
         duration=$(expr $(date -u +%s) - $start );
 
         # Conclusion metric used in snapp-updater action status, Should only run on self-hosted
-        if [ '${{ env.runnerName }}' != 'Hosted Agent' ]; then
+        if [ '${{ steps.variables.outputs.runnerName }}' != 'Hosted Agent' ]; then
           node scripts/metrics/updater.js \
             --runAttempt "${{ github.run_attempt }}" \
             --actor "${{ github.actor }}" \
-            --repository "${{ env.repository }}" \
-            --branch "${{ env.branch }}" \
+            --repository "${{ steps.variables.outputs.repository }}" \
+            --branch "${{ steps.variables.outputs.branch }}" \
             --eventName "${{ github.event_name }}" \
             --pullRequestID "${{ github.event.pull_request.number }}" \
             --startTime "" \
@@ -423,11 +422,11 @@ runs:
             --duration "$duration" \
             --failedStep "${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.tag.conclusion == 'Failure' && 'tag' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || steps.start-metrics.conclusion == 'Failure' && 'start-metrics' || ''}}" \
             --commitMessage "${{ github.event.head_commit.message }}" \
-            --url "https://github.com/${{ github.repository_owner }}/${{ env.repository }}/actions/runs/${{ github.run_id }}" \
-            --secrets-ci '${{ env.secrets }}';
+            --url "https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}" \
+            --secrets-ci '${{ steps.variables.outputs.secrets }}';
         fi;
 
-        if [ '${{ env.skipAWS }}' == '' ]; then
+        if [ '${{ steps.variables.outputs.skipAWS }}' == '' ]; then
           echo "Skipping final metric because one of the following inputs has not been provided: aws-access-key-id, aws-secret-access-key, aws-cloudfront-distribution-id, aws-s3-bucket-name"
         else 
           npx -y jjo \
@@ -436,9 +435,9 @@ runs:
             data=$(npx -y jjo \
               conclusion=${{ github.action_status }} \
               duration=$duration \
-              repository=${{ env.repository }} \
+              repository=${{ steps.variables.outputs.repository }} \
               repositoryOwner=${{ github.repository_owner }} \
-              branch=${{ env.branch }} \
+              branch=${{ steps.variables.outputs.branch }} \
               baseRef=${{ github.base_ref }} \
               actor=${{ github.actor }} \
               eventName=${{ github.event_name }} \
@@ -448,11 +447,11 @@ runs:
               sha_pr_head=${{ github.event.pull_request.head.sha }} \
               sha=${{ github.event.pull_request.base.sha }} \
               pullRequestID=${{ github.event.pull_request.number }} \
-              url='https://github.com/${{ github.repository_owner }}/${{ env.repository }}/actions/runs/${{ github.run_id }}' \
+              url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
               runAttempt=${{ github.run_attempt }} \
               failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.tag.conclusion == 'Failure' && 'tag' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || steps.start-metrics.conclusion == 'Failure' && 'start-metrics' || ''}}' \
             ) \
-          > SnapAction-${{ env.repository }}-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
+          > SnapAction-${{ steps.variables.outputs.repository }}-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
           cat ./SnapAction*.json && \
           aws s3 cp --region us-east-1 ./SnapAction*.json s3://datawarehouse-stage/team-metrics-import/
         fi;
