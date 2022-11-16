@@ -82,6 +82,7 @@ runs:
         else
           branch=`echo ${GITHUB_REF#refs/heads/}`;
         fi;
+        echo "branch is: $branch";
         echo "branch=$branch" >> $GITHUB_OUTPUT;
         echo "Using branch: $branch";
 
