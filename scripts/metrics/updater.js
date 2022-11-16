@@ -1,5 +1,3 @@
-import { STATUS_CODES } from 'http';
-
 const fsp = require('fs').promises;
 const exit = require('process').exit;
 const getCliArgs = require('../utils/getCliArgs');
