@@ -83,32 +83,32 @@ runs:
           branch=`echo ${GITHUB_REF#refs/heads/}`;
         fi;
         echo "branch is: $branch";
-        echo "branch=$branch" >> $GITHUB_OUTPUT;
+        echo "branch=$branch" >> $env:GITHUB_OUTPUT;
         echo "Using branch: $branch";
 
         secrets=`echo '${{ inputs.secrets }}' | jq -c .`;
-        echo "secrets=$secrets" >> $GITHUB_OUTPUT;
+        echo "secrets=$secrets" >> $env:GITHUB_OUTPUT;
         echo "Using secrets: $secrets";
 
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
-        echo "siteId_Type=$siteId_Type" >> $GITHUB_OUTPUT;
+        echo "siteId_Type=$siteId_Type" >> $env:GITHUB_OUTPUT;
 
         packageJSONVersion=`jq -r '.version' < package.json`;
-        echo "packageJSONVersion=$packageJSONVersion" >> $GITHUB_OUTPUT;
+        echo "packageJSONVersion=$packageJSONVersion" >> $env:GITHUB_OUTPUT;
 
         if [ $siteId_Type = 'string' ]; then \
           echo "siteId is a string"; \
           siteId=`jq -r '.searchspring.siteId' < package.json`; \
-          echo "siteId=$siteId" >> $GITHUB_OUTPUT; \
+          echo "siteId=$siteId" >> $env:GITHUB_OUTPUT; \
           echo "Using siteId: $siteId"; \
         elif [ $siteId_Type = 'object' ]; then \
           echo "siteId is an object"; \
           siteIds=`jq -r '.searchspring.siteId | keys_unsorted | join(",")' < package.json`; \
-          echo "siteIds=$siteIds" >> $GITHUB_OUTPUT; \
+          echo "siteIds=$siteIds" >> $env:GITHUB_OUTPUT; \
           echo "Using siteIds: $siteIds"; \
 
           siteNames=`jq -r '[.searchspring.siteId[].name] | join(",")' < package.json`; \
-          echo "siteNames=$siteNames" >> $GITHUB_OUTPUT; \
+          echo "siteNames=$siteNames" >> $env:GITHUB_OUTPUT; \
           echo "Using siteNames: $siteNames"; \
         else \
           echo "Cannot determine project siteId from package.json"; \
@@ -116,20 +116,20 @@ runs:
         fi;
 
         pullRequestID=${{ github.event.pull_request.number }}
-        echo "pullRequestID=$pullRequestID" >> $GITHUB_OUTPUT;
+        echo "pullRequestID=$pullRequestID" >> $env:GITHUB_OUTPUT;
         echo "Using pullRequestID: $pullRequestID"
         repository=`git config --get remote.origin.url | grep -Eo "[^\/]+$" | sed 's/.git//g'`
-        echo "repository=$repository" >> $GITHUB_OUTPUT;
+        echo "repository=$repository" >> $env:GITHUB_OUTPUT;
         echo "Using repository: $repository"
         startTime=`date -u +%s`
-        echo "startTime=$startTime" >> $GITHUB_OUTPUT;
+        echo "startTime=$startTime" >> $env:GITHUB_OUTPUT;
         echo "Using startTime: $startTime"
 
         skipAWS='${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}'
-        echo "skipAWS=$skipAWS" >> $GITHUB_OUTPUT;
+        echo "skipAWS=$skipAWS" >> $env:GITHUB_OUTPUT;
         echo "Using skipAWS: $skipAWS"
 
-        echo "runnerName=$RUNNER_NAME" >> $GITHUB_OUTPUT;
+        echo "runnerName=$RUNNER_NAME" >> $env:GITHUB_OUTPUT;
         echo "Using runnerName: $RUNNER_NAME"
 
     - name: Configure AWS credentials
@@ -262,8 +262,8 @@ runs:
           echo 'no pull request ID found'; \
         elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
           npm run lighthouse -- --throttling.cpuSlowdownMultiplier=2.2 && \
-          echo "scores=$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" >> $GITHUB_OUTPUT; \
-          echo "report=$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" >> $GITHUB_OUTPUT || exit 1; \
+          echo "scores=$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" >> $env:GITHUB_OUTPUT; \
+          echo "report=$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .htmlPath')" >> $env:GITHUB_OUTPUT || exit 1; \
         else \
           echo 'lighthouserc.js file not found in repository, skipping lighthouse tests'; \
         fi
@@ -286,14 +286,14 @@ runs:
                 git tag -a "$newTag" -m "tagged from snap-action"
                 git push origin $newTag
                 tag=`echo "$newTag"`;
-                echo "tag=$tag" >> $GITHUB_OUTPUT;
+                echo "tag=$tag" >> $env:GITHUB_OUTPUT;
               fi
           else
               # tag doesn't exist, create it from the package.json version
               git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
               git push origin ${{ steps.variables.outputs.packageJSONVersion }}
               tag=`echo "${{ steps.variables.outputs.packageJSONVersion }}"`;
-              echo "tag=$tag" >> $GITHUB_OUTPUT;
+              echo "tag=$tag" >> $env:GITHUB_OUTPUT;
           fi
         fi
 
