@@ -405,7 +405,7 @@ runs:
         fi;
     
     - run: |
-        duration=`$(expr $(date -u +%s) - ${{ steps.variables.outputs.startTime }} )`
+        duration="$(($(date -u +%s)-${{ steps.variables.outputs.startTime }}))"
         echo "duration is $duration"
 
         if [ '${{ steps.variables.outputs.runnerName }}' != 'Hosted Agent' ]; then
