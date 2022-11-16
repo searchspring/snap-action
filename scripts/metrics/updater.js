@@ -78,7 +78,7 @@ const BRANCH_PREFIX = 'update/';
             body: JSON.stringify(data)
         });
 
-        const responseData = response.json();
+        const responseData = await response.json();
         console.log("responseData:")
         console.log(responseData);
 
