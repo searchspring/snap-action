@@ -67,11 +67,13 @@ const BRANCH_PREFIX = 'update/';
         console.log(`Sending Updater Metrics:`);
         console.log(data);
 
-        const response = await fetch(UPDATER_URL, {
+        const endpoint = `${UPDATER_URL}/api/action/${startTime ? 'start' : 'conclusion'}`;
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': UPDATER_TOKEN
+                'Authorization': UPDATER_TOKEN,
+                'ngrok-skip-browser-warning': '1'
             },
             body: JSON.stringify(data)
         });
