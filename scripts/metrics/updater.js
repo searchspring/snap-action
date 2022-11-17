@@ -29,7 +29,7 @@ const BRANCH_PREFIX = 'update/';
 
         let version;
         if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
-            version = commitMessage.split(BRANCH_PREFIX).pop();
+            version = commitMessage.split(BRANCH_PREFIX).pop().split('\n').shift();
         } else if (branch.includes(BRANCH_PREFIX)) {
             version = branch.split(BRANCH_PREFIX).pop();
         }
