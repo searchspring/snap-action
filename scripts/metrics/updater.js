@@ -3,6 +3,7 @@ const getCliArgs = require('../utils/getCliArgs');
 const https = require('../utils/https');
 
 const BRANCH_PREFIX = 'update/';
+const REVERT_BRANCH_PREFIX = 'revert/';
 (async function () {
     try {
         const now = new Date()
@@ -28,14 +29,19 @@ const BRANCH_PREFIX = 'update/';
         const UPDATER_URL = secrets['UPDATER_URL'];
 
         let version;
+        let tag;
         if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
             version = commitMessage.split(BRANCH_PREFIX).pop().split('\n').shift();
+        } else if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${REVERT_BRANCH_PREFIX}`)) {
+            tag = commitMessage.split(REVERT_BRANCH_PREFIX).pop().split('\n').shift();
         } else if (branch.includes(BRANCH_PREFIX)) {
             version = branch.split(BRANCH_PREFIX).pop();
+        } else if (branch.includes(REVERT_BRANCH_PREFIX)) {
+            tag = branch.split(REVERT_BRANCH_PREFIX).pop();
         }
 
-        if (!version) {
-            console.log(`NOT Sending Updater Metrics - no version found!`);
+        if (!version && !tag) {
+            console.log(`NOT Sending Updater Metrics - no version or tag found!`);
             exit(1);
         }
 
@@ -46,6 +52,7 @@ const BRANCH_PREFIX = 'update/';
 
         const data = {
             version,
+            tag,
             runAttempt,
             actor,
             repository,
