@@ -128,8 +128,9 @@ runs:
         echo "::set-output name=skipAWS::$skipAWS";
         echo "Using skipAWS: $skipAWS"
 
-        echo "::set-output name=runnerName::$RUNNER_NAME";
-        echo "Using runnerName: $RUNNER_NAME"
+        isSelfHosted=${{ $RUNNER_NAME != 'Hosted Agent' || $RUNNER_NAME != 'Github Actions 2' }}
+        echo "::set-output name=isSelfHosted::$isSelfHosted";
+        echo "Using isSelfHosted: $isSelfHosted"
 
     - name: Configure AWS credentials
       id: configure-aws
@@ -142,7 +143,7 @@ runs:
 
     - name: Updater Start Metrics
       id: start-metrics
-      if: ${{ steps.variables.outputs.runnerName != 'Hosted Agent' }}
+      if: ${{ steps.variables.outputs.isSelfHosted }}
       shell: bash
       run: |
         # Start time metric used in snapp-updater action status, Should only run on self-hosted
@@ -407,7 +408,7 @@ runs:
     - run: |
         duration="$(($(date -u +%s)-${{ steps.variables.outputs.startTime }}))"
 
-        if [ '${{ steps.variables.outputs.runnerName }}' != 'Hosted Agent' ]; then
+        if [ '${{ steps.variables.outputs.isSelfHosted }}' == 'true' ]; then
           # Conclusion metric used in snapp-updater action status, Should only run on self-hosted
           node scripts/metrics/updater.js \
             --runAttempt "${{ github.run_attempt }}" \
