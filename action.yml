@@ -143,7 +143,7 @@ runs:
 
     - name: Updater Start Metrics
       id: start-metrics
-      if: ${{ steps.variables.outputs.isSelfHosted }}
+      if: ${{ steps.variables.outputs.isSelfHosted == 'true' }}
       shell: bash
       run: |
         # Start time metric used in snapp-updater action status, Should only run on self-hosted
