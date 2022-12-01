@@ -92,7 +92,7 @@ runs:
         siteId_Type=`jq -r '.searchspring.siteId | type' < package.json`;
         echo "::set-output name=siteId_Type::$siteId_Type";
 
-        packageJSONVersion=`jq -r '.version' < package.json`;
+        packageJSONVersion=`jq -r '.searchspring.version' < package.json`;
         echo "::set-output name=packageJSONVersion::$packageJSONVersion";
 
         if [ $siteId_Type = 'string' ]; then \
@@ -288,8 +288,8 @@ runs:
                 tag=`echo "$newTag"`;
                 echo "::set-output name=tag::$tag";
               fi
-          else
-              # tag doesn't exist, create it from the package.json version
+          elif [ "${{ steps.variables.outputs.packageJSONVersion }}" != "" ]; then
+              # tag doesn't exist, create it from the package.json searchspring.version
               git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
               git push origin ${{ steps.variables.outputs.packageJSONVersion }}
               tag=`echo "${{ steps.variables.outputs.packageJSONVersion }}"`;
