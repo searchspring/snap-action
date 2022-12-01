@@ -128,7 +128,7 @@ runs:
         echo "::set-output name=skipAWS::$skipAWS";
         echo "Using skipAWS: $skipAWS"
 
-        isSelfHosted=${{ $RUNNER_NAME != 'Hosted Agent' || $RUNNER_NAME != 'Github Actions 2' }}
+        isSelfHosted=${{ $RUNNER_NAME != 'Hosted Agent' && $RUNNER_NAME != 'Github Actions 2' }}
         echo "::set-output name=isSelfHosted::$isSelfHosted";
         echo "Using isSelfHosted: $isSelfHosted"
 
