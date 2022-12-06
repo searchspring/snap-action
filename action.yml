@@ -270,32 +270,32 @@ runs:
     
     - name: Git Tag
       id: tag
+      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' && !contains(github.event.head_commit.message,'from searchspring-implementations/revert/') }}
       shell: bash
       working-directory: repository
       run: |
-        if [ ${{ steps.variables.outputs.branch }} = production ]; then
-          git config user.name searchspring-machine
-          git config user.email machine@searchspring.com
+        git config user.name searchspring-machine
+        git config user.email machine@searchspring.com
 
-          if [ $(git tag -l "${{ steps.variables.outputs.packageJSONVersion }}") ]; then
-              # tag exist, use scripts/tag/increment.js to bump/add suffix version
-              echo "Tag ${{ steps.variables.outputs.packageJSONVersion }} already exists."
-              newTag=$(node ./../scripts/tag/increment.js --tags "$(git tag -l '${{ steps.variables.outputs.packageJSONVersion }}*')")
-              if [ "${{ steps.variables.outputs.packageJSONVersion }}" != "$newTag" ]; then
-                echo "Creating tag $newTag"
-                git tag -a "$newTag" -m "tagged from snap-action"
-                git push origin $newTag
-                tag=`echo "$newTag"`;
-                echo "::set-output name=tag::$tag";
-              fi
-          elif [ "${{ steps.variables.outputs.packageJSONVersion }}" != "" ]; then
-              # tag doesn't exist, create it from the package.json searchspring.version
-              git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
-              git push origin ${{ steps.variables.outputs.packageJSONVersion }}
-              tag=`echo "${{ steps.variables.outputs.packageJSONVersion }}"`;
+        if [ $(git tag -l "${{ steps.variables.outputs.packageJSONVersion }}") ]; then
+            # tag exist, use scripts/tag/increment.js to bump/add suffix version
+            echo "Tag ${{ steps.variables.outputs.packageJSONVersion }} already exists."
+            newTag=$(node ./../scripts/tag/increment.js --tags "$(git tag -l '${{ steps.variables.outputs.packageJSONVersion }}*')")
+            if [ "${{ steps.variables.outputs.packageJSONVersion }}" != "$newTag" ]; then
+              echo "Creating tag $newTag"
+              git tag -a "$newTag" -m "tagged from snap-action"
+              git push origin $newTag
+              tag=`echo "$newTag"`;
               echo "::set-output name=tag::$tag";
-          fi
+            fi
+        elif [ "${{ steps.variables.outputs.packageJSONVersion }}" != "" ]; then
+            # tag doesn't exist, create it from the package.json searchspring.version
+            git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
+            git push origin ${{ steps.variables.outputs.packageJSONVersion }}
+            tag=`echo "${{ steps.variables.outputs.packageJSONVersion }}"`;
+            echo "::set-output name=tag::$tag";
         fi
+        
 
     - name: PR Comment
       id: pr-comment
