@@ -28,20 +28,21 @@ const REVERT_BRANCH_PREFIX = 'revert/';
         const UPDATER_TOKEN = secrets['UPDATER_TOKEN'];
         const UPDATER_URL = secrets['UPDATER_URL'];
 
-        let version;
-        let tag;
+        let id, version;
         if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
             version = commitMessage.split(BRANCH_PREFIX).pop().split('\n').shift();
+            id = BRANCH_PREFIX + version;
         } else if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${REVERT_BRANCH_PREFIX}`)) {
-            tag = commitMessage.split(REVERT_BRANCH_PREFIX).pop().split('\n').shift();
+            version = commitMessage.split(REVERT_BRANCH_PREFIX).pop().split('\n').shift();
+            id = REVERT_BRANCH_PREFIX + version;
         } else if (branch.includes(BRANCH_PREFIX)) {
-            version = branch.split(BRANCH_PREFIX).pop();
+            id = branch;
         } else if (branch.includes(REVERT_BRANCH_PREFIX)) {
-            tag = branch.split(REVERT_BRANCH_PREFIX).pop();
+            id = branch;
         }
 
-        if (!version && !tag) {
-            console.log(`NOT Sending Updater Metrics - no version or tag found!`);
+        if (!version && branch == 'production' || !id) {
+            console.log(`NOT Sending Updater Metrics - no version or id found!`);
             exit(1);
         }
 
@@ -51,14 +52,14 @@ const REVERT_BRANCH_PREFIX = 'revert/';
         }
 
         const data = {
-            version,
-            tag,
+            id,
             runAttempt,
             actor,
             repository,
             branch,
             eventName,
             pullRequestID,
+            
         }
 
         if (pullRequestID) {
