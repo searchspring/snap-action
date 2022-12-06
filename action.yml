@@ -270,7 +270,7 @@ runs:
     
     - name: Git Tag
       id: tag
-      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' && !contains(github.event.head_commit.message,'from searchspring-implementations/revert/') }}
+      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' }}
       shell: bash
       working-directory: repository
       run: |
@@ -295,7 +295,12 @@ runs:
             tag=`echo "${{ steps.variables.outputs.packageJSONVersion }}"`;
             echo "::set-output name=tag::$tag";
         fi
-        
+
+        if [ "${{ contains(github.event.head_commit.message,'from searchspring-implementations/revert/') }}" == "true" ]; then
+          tagToDelete=$(node ./../scripts/tag/getTag.js --tags "$(git tag -l '${{ steps.variables.outputs.packageJSONVersion }}*')" --commitMessage "${{ github.event.head_commit.message }}")
+          git push --delete origin $tagToDelete
+        fi
+
 
     - name: PR Comment
       id: pr-comment

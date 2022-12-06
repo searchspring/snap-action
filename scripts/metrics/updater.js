@@ -1,9 +1,10 @@
 const exit = require('process').exit;
 const getCliArgs = require('../utils/getCliArgs');
 const https = require('../utils/https');
+const constants = require('../utils/constants');
 
-const BRANCH_PREFIX = 'update/';
-const REVERT_BRANCH_PREFIX = 'revert/';
+const { BRANCH_PREFIX, REVERT_BRANCH_PREFIX } = constants;
+
 (async function () {
     try {
         const now = new Date()
