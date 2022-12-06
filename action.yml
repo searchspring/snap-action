@@ -297,7 +297,7 @@ runs:
         fi
 
         if [ "${{ contains(github.event.head_commit.message,'from searchspring-implementations/revert/') }}" == "true" ]; then
-          tagToDelete=$(node ./../scripts/tag/getTag.js --tags "$(git tag -l '${{ steps.variables.outputs.packageJSONVersion }}*')" --commitMessage "${{ github.event.head_commit.message }}")
+          tagToDelete=$(node ./../scripts/tag/getTag.js --tags "$(git tag -l)" --commitMessage "${{ github.event.head_commit.message }}")
           git push --delete origin $tagToDelete
         fi
 
