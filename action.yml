@@ -128,7 +128,8 @@ runs:
         echo "::set-output name=skipAWS::$skipAWS";
         echo "Using skipAWS: $skipAWS"
 
-        isSelfHosted=${{ (startsWith(github.head_ref, 'update/') || startsWith(github.ref_name, 'update/') || startsWith(github.head_ref, 'revert/') || startsWith(github.ref_name, 'revert/') || (github.ref_name == github.event.repository.master_branch && (contains(github.event.head_commit.message,'from searchspring-implementations/update/') || contains(github.event.head_commit.message,'from searchspring-implementations/revert/')))) && 'true' || 'false' }}
+        # isSelfHosted=${{ (startsWith(github.head_ref, 'update/') || startsWith(github.ref_name, 'update/') || startsWith(github.head_ref, 'revert/') || startsWith(github.ref_name, 'revert/') || (github.ref_name == github.event.repository.master_branch && (contains(github.event.head_commit.message,'from searchspring-implementations/update/') || contains(github.event.head_commit.message,'from searchspring-implementations/revert/')))) && 'true' || 'false' }}
+        isSelfHosted=false
         echo "::set-output name=isSelfHosted::$isSelfHosted";
         echo "Using isSelfHosted: $isSelfHosted"
 
