@@ -25,13 +25,13 @@ jobs:
         with:
         # required
           repository: ${{ env.GITHUB_REPOSITORY }}
+        # optional
           secretKey: ${{ secrets.WEBSITE_SECRET_KEY }}
           secrets: ${{ toJSON(secrets) }}
           aws-access-key-id: ${{ secrets.SNAPFU_AWS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.SNAPFU_AWS_SECRET_ACCESS_KEY }}
           aws-cloudfront-distribution-id: ${{secrets.SNAPFU_AWS_DISTRIBUTION_ID}}
           aws-s3-bucket-name: ${{secrets.SNAPFU_AWS_BUCKET}}
-        # optional
           aws-region: us-east-2
           NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
           GITHUB_BOT_TOKEN: ${{ secrets.MACHINE_TOKEN }}
@@ -55,7 +55,7 @@ with:
 However if the action will be invoked from the same repository as the implementation, `${{ env.GITHUB_REPOSITORY }}` can be used. 
 
 ### secretKey
-The `secretKey` input parameter is **required**. This is used to authenticate the project's siteId (specified in the package.json `searchspring.siteId`) with the Searchspring account. The `secretKey` value can be found in the [Searchspring Management Console](https://manage.searchspring.net/)
+The `secretKey` input parameter is only required if the `searchspring.siteId` property of the project's package.json file is a string. This is used to authenticate the project's siteId (specified in the package.json `searchspring.siteId`) with the Searchspring account. The `secretKey` value can be found in the [Searchspring Management Console](https://manage.searchspring.net/)
 
 If your project was created via [snapfu](https://github.com/searchspring/snapfu), you may have already specified a secret key and the repository will contain the secret `WEBSITE_SECRET_KEY` available to be used as the `secretKey` in your workflow.
 
@@ -65,23 +65,23 @@ with:
 ```
 
 ### aws-access-key-id
-The `aws-access-key-id` input parameter is **required**. 
+The `aws-access-key-id` input parameter is only required if the action is being used with repositories in Searchspring's organization.
 
 ### aws-secret-access-key
-The `aws-secret-access-key` input parameter is **required**. 
+The `aws-secret-access-key` input parameter is only required if the action is being used with repositories in Searchspring's organization.
 
 ### aws-cloudfront-distribution-id
-The `aws-cloudfront-distribution-id` input parameter is **required**.
+The `aws-cloudfront-distribution-id` input parameter is only required if the action is being used with repositories in Searchspring's organization.
 
 ### aws-s3-bucket-name
-The `aws-s3-bucket-name` input parameter is **required**.
+The `aws-s3-bucket-name` input parameter is only required if the action is being used with repositories in Searchspring's organization.
 
 ---
 
 ### The following parameters are **optional**
 
 ### aws-region
-The `aws-s3-bucket-name` input parameter is optional. The default region if not specified is `us-east-2`
+The `aws-s3-bucket-name` input parameter is optional and is not used unless the action is being used with repositories in Searchspring's organization. The default region if not specified is `us-east-2`
 
 ### NODE_AUTH_TOKEN
 The `NODE_AUTH_TOKEN` input parameter is optional. It allows for installation of private packages that require a token to authenticate when `npm install` is invoked. 
@@ -107,7 +107,7 @@ The `skipPublish` input parameter is optional. If set to `true`, the action will
 The `skipInvalidation` input parameter is optional. If set to `true`, the action will invalidate the CDN.
 
 ### secrets
-The `secrets` input parameter is required if the `searchspring.siteId` property of the project's package.json file is an object.
+The `secrets` input parameter is only required if the `searchspring.siteId` property of the project's package.json file is an object.
 
 For example: 
 ```json
