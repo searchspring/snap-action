@@ -1,5 +1,5 @@
-const BRANCH_PREFIX = 'update/';
-const REVERT_BRANCH_PREFIX = 'revert/';
+const BRANCH_PREFIX = 'updater/patch/';
+const REVERT_BRANCH_PREFIX = 'updater/revert/';
 
 module.exports = {
     BRANCH_PREFIX,

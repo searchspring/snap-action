@@ -128,8 +128,7 @@ runs:
         echo "::set-output name=skipAWS::$skipAWS";
         echo "Using skipAWS: $skipAWS"
 
-        # isSelfHosted=${{ (startsWith(github.head_ref, 'update/') || startsWith(github.ref_name, 'update/') || startsWith(github.head_ref, 'revert/') || startsWith(github.ref_name, 'revert/') || (github.ref_name == github.event.repository.master_branch && (contains(github.event.head_commit.message,'from searchspring-implementations/update/') || contains(github.event.head_commit.message,'from searchspring-implementations/revert/')))) && 'true' || 'false' }}
-        isSelfHosted=false
+        isSelfHosted=${{ (startsWith(github.head_ref, 'updater/patch/') || startsWith(github.ref_name, 'updater/patch/') || startsWith(github.head_ref, 'updater/revert/') || startsWith(github.ref_name, 'updater/revert/') || (github.ref_name == github.event.repository.master_branch && (contains(github.event.head_commit.message,'from searchspring-implementations/updater/patch/') || contains(github.event.head_commit.message,'from searchspring-implementations/updater/revert/')))) && 'true' || 'false' }}
         echo "::set-output name=isSelfHosted::$isSelfHosted";
         echo "Using isSelfHosted: $isSelfHosted"
 
@@ -297,7 +296,7 @@ runs:
             echo "::set-output name=tag::$tag";
         fi
 
-        if [ "${{ contains(github.event.head_commit.message,'from searchspring-implementations/revert/') }}" == "true" ]; then
+        if [ "${{ contains(github.event.head_commit.message,'from searchspring-implementations/updater/revert/') }}" == "true" ]; then
           tagToDelete=$(node ./../scripts/tag/getTag.js --tags "$(git tag -l)" --commitMessage "${{ github.event.head_commit.message }}")
           git push --delete origin $tagToDelete
         fi
