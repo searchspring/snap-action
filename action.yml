@@ -147,7 +147,7 @@ runs:
       shell: bash
       run: |
         # Start time metric used in snapp-updater action status, Should only run on self-hosted
-        echo "hi"
+        echo ""
 
     - name: Cache node_modules
       id: cache
@@ -378,14 +378,12 @@ runs:
             if [ "${{ steps.variables.outputs.isSelfHosted }}" = "true" ]; then
               echo "Only invalidating modern.bundle.js and universal.bundle.js due to self-hosted"
               if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
-                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/modern.bundle.js"
-                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/universal.bundle.js"
+                aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/bundle.js"
               elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
                 echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
                   do
                     echo "Invalidating files for siteId $siteId"
-                    aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/modern.bundle.js"
-                    aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/universal.bundle.js"
+                    aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/bundle.js"
                   done
               fi
             elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
@@ -412,6 +410,8 @@ runs:
     
     - run: |
         duration="$(($(date -u +%s)-${{ steps.variables.outputs.startTime }}))"
+
+        
 
         if [ '${{ steps.variables.outputs.skipAWS }}' == '' ]; then
           echo "Skipping final metric because one of the following inputs has not been provided: aws-access-key-id, aws-secret-access-key, aws-cloudfront-distribution-id, aws-s3-bucket-name"
