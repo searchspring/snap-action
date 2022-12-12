@@ -409,7 +409,9 @@ runs:
                 done
             fi
           else
-            if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
+            if [ "${{ steps.variables.outputs.isSelfHosted }}" = "true" ]; then
+              echo "Skipping invalidation for branch due to self-hosted"
+            elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
               aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/*"
             elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
               echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
