@@ -389,14 +389,14 @@ runs:
         else
           if [ ${{ steps.variables.outputs.branch }} = production ]; then
             if [ "${{ steps.variables.outputs.isSelfHosted }}" = "true" ]; then
-              echo "Only invalidating modern.bundle.js and universal.bundle.js due to self-hosted"
+              echo "Only invalidating bundle.js due to self-hosted"
               if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
                 aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/${{ steps.variables.outputs.siteId }}/bundle.js"
               elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'object' ]; then
                 echo "${{ steps.variables.outputs.siteIds }}" | tr , '\n' | while read siteId
                   do
                     echo "Invalidating files for siteId $siteId"
-                    aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/modern.bundle.js"
+                    aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/bundle.js"
                   done
               fi
             elif [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then
