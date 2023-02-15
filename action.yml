@@ -423,7 +423,6 @@ runs:
     
     - run: |
         duration="$(($(date -u +%s)-${{ steps.variables.outputs.startTime }}))"
-        patchId=$(node scripts/utils/patchId.js --commitMessage "${{ github.event.head_commit.message }}")
         
         if [ '${{ steps.variables.outputs.isSelfHosted }}' == 'true' ]; then
           # Conclusion metric used in snapp-updater action status, Should only run on self-hosted
@@ -446,6 +445,7 @@ runs:
         if [ '${{ steps.variables.outputs.skipAWS }}' == '' ]; then
           echo "Skipping final metric because one of the following inputs has not been provided: aws-access-key-id, aws-secret-access-key, aws-cloudfront-distribution-id, aws-s3-bucket-name"
         else 
+          patchId=$(node scripts/utils/patchId.js --branch "${{ steps.variables.outputs.branch }}" --commitMessage "${{ github.event.head_commit.message }}")
           npx -y jjo \
             timestamp=$(date -u +"%FT%TZ" | tr -d '\n') \
             type=snap-action \
