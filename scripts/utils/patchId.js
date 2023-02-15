@@ -7,8 +7,10 @@ const { BRANCH_PREFIX, REVERT_BRANCH_PREFIX } = constants;
 (async function () {
     try {
         const args = getCliArgs(['commitMessage']);
+        
+        const { commitMessage } = args
 
-        if(args.commitMessage) {
+        if(commitMessage) {
             if (commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
                 const version = commitMessage.split(BRANCH_PREFIX).pop().split('\n').shift();
                 if(version) {
