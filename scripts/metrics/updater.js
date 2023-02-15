@@ -1,13 +1,10 @@
 const exit = require('process').exit;
 const getCliArgs = require('../utils/getCliArgs');
 const https = require('../utils/https');
-const constants = require('../utils/constants');
-
-const { BRANCH_PREFIX, REVERT_BRANCH_PREFIX } = constants;
+const getPatchId = require('../utils/getPatchId');
 
 (async function () {
     try {
-        const now = new Date()
         const args = getCliArgs(['runAttempt', 'actor', 'repository', 'branch', 'eventName', 'pullRequestID', 'startTime', 'conclusion', 'duration', 'failedStep', 'commitMessage', 'url', 'secrets-ci']);
 
         if (!args.siteId_Type === 'object' && (!args.siteIds || !args.siteNames || !args['secrets-ci'])) {
@@ -29,18 +26,7 @@ const { BRANCH_PREFIX, REVERT_BRANCH_PREFIX } = constants;
         const UPDATER_TOKEN = secrets['UPDATER_TOKEN'];
         const UPDATER_URL = secrets['UPDATER_URL'];
 
-        let id, version;
-        if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
-            version = commitMessage.split(BRANCH_PREFIX).pop().split('\n').shift();
-            id = BRANCH_PREFIX + version;
-        } else if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${REVERT_BRANCH_PREFIX}`)) {
-            version = commitMessage.split(REVERT_BRANCH_PREFIX).pop().split('\n').shift();
-            id = REVERT_BRANCH_PREFIX + version;
-        } else if (branch.includes(BRANCH_PREFIX)) {
-            id = branch;
-        } else if (branch.includes(REVERT_BRANCH_PREFIX)) {
-            id = branch;
-        }
+        const { id, version } = getPatchId(commitMessage, branch)
 
         if (!version && branch == 'production' || !id) {
             console.log(`NOT Sending Updater Metrics - no version or id found!`);
