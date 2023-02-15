@@ -9,7 +9,7 @@ const getCliArgs = require('../utils/getCliArgs');
             exit(0)
         }
 
-        console.log(args.text.replace(/(?:\r\n|\r|\n)/g, '').replaceAll(`'`, `\'`).replaceAll(`"`,` \"`));
+        console.log(args.text.replace(/(?:\r\n|\r|\n)/g, ' ').replaceAll(`'`, `\'`).replaceAll(`"`,` \"`));
         exit(0);        
     } catch (err) {
         console.error(`Error during escape.js - could not escape text: ${args.text}`);
