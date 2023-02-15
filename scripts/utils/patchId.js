@@ -10,10 +10,15 @@ const getPatchId = require('./getPatchId');
         const { id } = getPatchId(commitMessage, branch)
         if(id) {
             console.log(id)
+        } else {
+            console.error("getPatchId didn't return id")
         }
         
         exit(0);        
     } catch (err) {
+        if(err) {
+            console.error(err)
+        }
         exit(0);
     }
 })();
