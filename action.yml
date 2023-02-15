@@ -423,7 +423,7 @@ runs:
     
     - run: |
         duration="$(($(date -u +%s)-${{ steps.variables.outputs.startTime }}))"
-        commitMessage=$(node scripts/utils/escape.js --text "${{ github.event.head_commit.message }}")
+        patchId=$(node scripts/utils/patchId.js --commitMessage "${{ github.event.head_commit.message }}")
         
         if [ '${{ steps.variables.outputs.isSelfHosted }}' == 'true' ]; then
           # Conclusion metric used in snapp-updater action status, Should only run on self-hosted
@@ -464,7 +464,7 @@ runs:
               sha_pr_head=${{ github.event.pull_request.head.sha }} \
               sha=${{ github.event.pull_request.base.sha }} \
               pullRequestID=${{ github.event.pull_request.number }} \
-              commitMessage=$commitMessage \
+              patchId=$patchId \
               url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
               runAttempt=${{ github.run_attempt }} \
               failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.tag.conclusion == 'Failure' && 'tag' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || steps.start-metrics.conclusion == 'Failure' && 'start-metrics' || ''}}' \
