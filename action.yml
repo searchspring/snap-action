@@ -423,7 +423,8 @@ runs:
     
     - run: |
         duration="$(($(date -u +%s)-${{ steps.variables.outputs.startTime }}))"
-        commitMessage=$(node scripts/utils/escape.js --text ${{ github.event.head_commit.message }})
+        commitMessage=$(node scripts/utils/escape.js --text "${{ github.event.head_commit.message }}")
+        echo "commitMessage is: $commitMessage"
         if [ '${{ steps.variables.outputs.isSelfHosted }}' == 'true' ]; then
           # Conclusion metric used in snapp-updater action status, Should only run on self-hosted
           node scripts/metrics/updater.js \
