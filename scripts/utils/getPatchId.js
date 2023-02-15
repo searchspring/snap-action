@@ -1,11 +1,8 @@
-const exit = require('process').exit;
-const getCliArgs = require('./getCliArgs');
 const constants = require('./constants');
-
-const { BRANCH_PREFIX, REVERT_BRANCH_PREFIX } = constants;
 
 function getPatchId(commitMessage, branch) {
     let id, version;
+    const { BRANCH_PREFIX, REVERT_BRANCH_PREFIX } = constants;
 
     if (branch == 'production' && commitMessage.includes(`from searchspring-implementations/${BRANCH_PREFIX}`)) {
         version = commitMessage.split(BRANCH_PREFIX).pop().split('\n').shift();
@@ -21,22 +18,5 @@ function getPatchId(commitMessage, branch) {
 
     return { id, version };
 }
-
-(async function () {
-    try {
-        const args = getCliArgs(['commitMessage', 'branch']);
-        
-        const { commitMessage, branch } = args
-
-        const { id } = getPatchId(commitMessage, branch)
-        if(id) {
-            console.log(id)
-        }
-        
-        exit(0);        
-    } catch (err) {
-        exit(0);
-    }
-})();
 
 module.exports = getPatchId;

@@ -3,14 +3,8 @@ const getCliArgs = require('../utils/getCliArgs');
 const https = require('../utils/https');
 const getPatchId = require('../utils/getPatchId');
 
-const constants = require('../utils/constants');
-
-
-const { BRANCH_PREFIX, REVERT_BRANCH_PREFIX } = constants;
-
 (async function () {
     try {
-        const now = new Date()
         const args = getCliArgs(['runAttempt', 'actor', 'repository', 'branch', 'eventName', 'pullRequestID', 'startTime', 'conclusion', 'duration', 'failedStep', 'commitMessage', 'url', 'secrets-ci']);
 
         if (!args.siteId_Type === 'object' && (!args.siteIds || !args.siteNames || !args['secrets-ci'])) {
