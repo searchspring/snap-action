@@ -1,3 +1,4 @@
+const exit = require('process').exit;
 const getPatchId = require('./getPatchId');
 
 (async function () {
