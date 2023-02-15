@@ -26,7 +26,6 @@ const getPatchId = require('../utils/getPatchId');
         const UPDATER_TOKEN = secrets['UPDATER_TOKEN'];
         const UPDATER_URL = secrets['UPDATER_URL'];
 
-        // let id, version;
         const { id, version } = getPatchId(commitMessage, branch)
 
         if (!version && branch == 'production' || !id) {
