@@ -24,7 +24,7 @@ const { BRANCH_PREFIX, REVERT_BRANCH_PREFIX } = constants;
         
         exit(0);        
     } catch (err) {
-        console.error(`Error during escape.js - could not escape text: ${args.text}`);
+        console.error(`Error during escape.js - could get patch ID from commitMessage: ${args?.commitMessage}`);
         console.error(err);
         exit(1);
     }
