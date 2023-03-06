@@ -84,7 +84,7 @@ runs:
         echo "Using branch: $branch";
 
         # validate branch name here
-        if [ $branch =~ ^[0-9]\+\.[0-9]\+\.[0-9]\+-\?[0-9]*$ ]; then
+        if [[ $branch =~ ^[0-9]+\.[0-9]+\.[0-9]+-?[0-9]*$ ]]; then
           echo "Branch name is reserved. Please do not use sem versioning for branch name.";
           exit 1;
         fi;
