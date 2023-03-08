@@ -83,6 +83,12 @@ runs:
         echo "::set-output name=branch::$branch";
         echo "Using branch: $branch";
 
+        # validate branch name here
+        if [[ $branch =~ ^[0-9]+\.[0-9]+\.[0-9]+-?[0-9]*$ ]]; then
+          echo "Branch name is reserved. Please do not use sem versioning for branch name.";
+          exit 1;
+        fi;
+
         secrets=`echo '${{ inputs.secrets }}' | jq -c .`;
         echo "::set-output name=secrets::$secrets";
         echo "Using secrets: $secrets";
@@ -122,9 +128,9 @@ runs:
         echo "::set-output name=startTime::$startTime"
         echo "Using startTime: $startTime"
 
-        skipAWS='${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}'
-        echo "::set-output name=skipAWS::$skipAWS";
-        echo "Using skipAWS: $skipAWS"
+        awsCreds='${{ inputs.aws-access-key-id && inputs.aws-secret-access-key && inputs.aws-cloudfront-distribution-id && inputs.aws-s3-bucket-name }}'
+        echo "::set-output name=awsCreds::$awsCreds";
+        echo "Using awsCreds: $awsCreds"
 
         isSelfHosted=${{ (startsWith(github.head_ref, 'updater/patch/') || startsWith(github.ref_name, 'updater/patch/') || startsWith(github.head_ref, 'updater/revert/') || startsWith(github.ref_name, 'updater/revert/') || (github.ref_name == github.event.repository.master_branch && (contains(github.event.head_commit.message,'from searchspring-implementations/updater/patch/') || contains(github.event.head_commit.message,'from searchspring-implementations/updater/revert/')))) && 'true' || 'false' }}
         echo "::set-output name=isSelfHosted::$isSelfHosted";
@@ -132,7 +138,7 @@ runs:
 
     - name: Configure AWS credentials
       id: configure-aws
-      if: ${{ steps.variables.outputs.skipAWS }}
+      if: ${{ steps.variables.outputs.awsCreds }}
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
@@ -315,7 +321,7 @@ runs:
           
     - name: Lighthouse Metrics
       id: lighthouse-metrics
-      if: ${{ steps.variables.outputs.skipAWS }}
+      if: ${{ steps.variables.outputs.awsCreds }}
       shell: bash
       run: |
         if [ ${{ inputs.skipLighthouse }} = false ]; then \
@@ -338,7 +344,7 @@ runs:
         
     - name: Copy Files to S3
       id: s3-upload
-      if: ${{ steps.variables.outputs.skipAWS }}
+      if: ${{ steps.variables.outputs.awsCreds }}
       shell: bash
       working-directory: repository
       run: |
@@ -372,7 +378,7 @@ runs:
 
     - name: Invalidate Files
       id: invalidation
-      if: ${{ steps.variables.outputs.skipAWS }}
+      if: ${{ steps.variables.outputs.awsCreds }}
       shell: bash
       working-directory: repository
       env:
@@ -442,7 +448,7 @@ runs:
             --secrets-ci '${{ steps.variables.outputs.secrets }}';
         fi;
 
-        if [ '${{ steps.variables.outputs.skipAWS }}' == '' ]; then
+        if [ '${{ steps.variables.outputs.awsCreds }}' == '' ]; then
           echo "Skipping final metric because one of the following inputs has not been provided: aws-access-key-id, aws-secret-access-key, aws-cloudfront-distribution-id, aws-s3-bucket-name"
         else 
           patchId=$(node scripts/utils/patchId.js --branch "${{ steps.variables.outputs.branch }}" --commitMessage "${{ github.event.head_commit.message }}")
