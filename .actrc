@@ -1,1 +1,2 @@
--P ubuntu-latest=gcr.io/searchspring-devops/snap-runner/snap-runner:latest
+--pull=false
+-P ubuntu-latest=snap-runner-local
