@@ -9,11 +9,11 @@ jobs:
       - name: Run composite snap-action
         uses: ./
         with:
-          # development flag
+          # testing variables (for development)
           testing: true
+          branch: ${{ env.GITHUB_REPOSITORY_BRANCH }}
           # required
           repository: ${{ env.GITHUB_REPOSITORY }}
-          branch: ${{ env.GITHUB_REPOSITORY_BRANCH }}
           secretKey: ${{ secrets.WEBSITE_SECRET_KEY }}
           secrets: ${{ toJSON(secrets) }}
           aws-access-key-id: ${{ secrets.SNAPFU_AWS_KEY_ID }}
