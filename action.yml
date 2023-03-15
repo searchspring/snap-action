@@ -5,6 +5,9 @@ inputs:
   repository:
     description: 'Repository of Snap implementation to publish'
     required: true
+  branch:
+    description: 'Repository branch (ref) to run action in (used for testing)'
+    required: false
   secretKey:
     description: 'Searchspring account secretKey. Can be obtained in the Searchspring Management Console. Required if package.json siteId is string format'
     required: false
@@ -52,6 +55,10 @@ inputs:
     description: 'Skip Cloudfront invalidation'
     required: false
     default: false
+  testing:
+    description: 'Used for development testing purposes only!'
+    required: false
+    default: false
 
 runs:
   using: "composite"
@@ -61,6 +68,7 @@ runs:
       uses: actions/checkout@v2
       with:
         repository: ${{ inputs.repository }}
+        ref: ${{ inputs.branch }}
         path: repository
         fetch-depth: 0
 
@@ -75,7 +83,11 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then \
+        echo "Action trigger: ${{ github.event_name }}";
+
+        if [ "${{ inputs.branch }}" != "" ]; then
+          branch=`echo "${{ inputs.branch }}"`;
+        elif [ "${{ github.event_name }}" = "pull_request" ]; then
           branch=`echo "${{ github.head_ref }}"`;
         else
           branch=`echo ${GITHUB_REF#refs/heads/}`;
@@ -224,19 +236,14 @@ runs:
 
     - name: Run Tests
       id: test
+      if: github.event_name == 'push' && github.ref_name != 'production'
       shell: bash
       working-directory: repository
       run: |
-        if [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
-          if [ ${{ inputs.skipTests }} = true ]; then \
-            echo 'skipping tests due to skipTests flag'; 
-          elif [ ${{ steps.variables.outputs.branch }} = production ]; then \
-            echo "skipping tests for push triggers to production"; \
-          else \
-            npm run test; \
-          fi; \
-        else \
-          echo 'skipping tests for pull_request triggers'; \
+        if [ ${{ inputs.skipTests }} = true ]; then
+          echo 'skipping tests due to skipTests flag'; 
+        else
+          npm run test;
         fi;
     
     - name: Snapfu Recs Sync
@@ -255,6 +262,7 @@ runs:
     
     - name: Lighthouse Tests
       id: lighthouse
+      if: github.event_name == 'pull_request'
       shell: bash
       working-directory: repository
       env:
@@ -262,8 +270,6 @@ runs:
       run: |
         if [ ${{ inputs.skipLighthouse }} = true ]; then \
           echo 'skipping lighthouse tests'; \
-        elif [ "${{ steps.variables.outputs.pullRequestID }}" = "" ]; then \
-          echo 'no pull request ID found'; \
         elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
           npm run lighthouse -- --throttling.cpuSlowdownMultiplier=2.2 && \
           echo "::set-output name=scores::$(cat tests/lighthouse/runs/manifest.json | jq -c '.[] | select( .isRepresentativeRun | select('true') ) | .summary' | jq -r 'to_entries[] | "\(.key): \(.value | tonumber * 100 | floor )"' | tr '\n' ',' )" &&  \
@@ -308,16 +314,21 @@ runs:
 
     - name: PR Comment
       id: pr-comment
+      if: steps.lighthouse.outputs.scores
       uses: actions/github-script@v5
       with:
         github-token: ${{ inputs.GITHUB_BOT_TOKEN || github.token }}
         script: |
-          ("${{ steps.lighthouse.outputs.scores }}" != '') && ("${{ inputs.LHCI_GITHUB_APP_TOKEN }}" == '') && github.rest.issues.createComment({
-            issue_number: ${{ steps.variables.outputs.pullRequestID || 0 }},
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
-          })
+          if (!${{ inputs.testing }}) {
+            github.rest.issues.createComment({
+              issue_number: ${{ steps.variables.outputs.pullRequestID || 0 }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "Lighthouse <a target='_blank' rel='noopener' href='https://snapui.searchspring.io/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}/" + ${{ steps.lighthouse.outputs.report || '""' }}.split('/').pop() + "'>Results</a>\n\n${{ steps.lighthouse.outputs.scores }}".split(',').join('\n')
+            });
+          } else {
+            console.log('skipping PR Comment due to testing')
+          }
           
     - name: Lighthouse Metrics
       id: lighthouse-metrics
@@ -482,4 +493,3 @@ runs:
       id: metrics
       shell: bash
       if: always()
-
