@@ -85,7 +85,7 @@ runs:
       run: |
         echo "Action trigger: ${{ github.event_name }}";
 
-        if [[ ${{ inputs.branch }} ]]; then
+        if [ "${{ inputs.branch }}" != "" ]; then
           branch=`echo "${{ inputs.branch }}"`;
         elif [ "${{ github.event_name }}" = "pull_request" ]; then
           branch=`echo "${{ github.head_ref }}"`;
