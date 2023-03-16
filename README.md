@@ -89,6 +89,8 @@ The `NODE_AUTH_TOKEN` input parameter is optional. It allows for installation of
 ### GITHUB_BOT_TOKEN
 The `GITHUB_BOT_TOKEN` input parameter is optional. Actions triggered on pull requests will run lighthouse testing and the scores will be posted in a pull request comment by the user "github-actions". To change this user, set `GITHUB_BOT_TOKEN` to a Github PAT of the desired user account.
 
+The `GITHUB_BOT_TOKEN` input parameter is also used for pushing tags and is required if tag protection rules are setup on the repository.
+
 ### LHCI_GITHUB_APP_TOKEN
 The `LHCI_GITHUB_APP_TOKEN` input parameter is optional. This is passed along to lighthouse and if set the reports will be uploaded to a remote server (requires `lighthouserc.js` file in implementation repo to contain valid `ci.upload.target` config). Additionally, if the organization has contains the [Lighthouse CI Github App](https://github.com/apps/lighthouse-ci) installed, setting `LHCI_GITHUB_APP_TOKEN` will also trigger this app to post a status check to the pull request. 
 

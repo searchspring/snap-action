@@ -46,7 +46,7 @@ inputs:
     description: 'Lighthouse App Key for PR status updates'
     required: false
   GITHUB_BOT_TOKEN:
-    description: 'Github user PAT token for posting lighthouse results in pull request comments'
+    description: 'Github user PAT token for posting lighthouse results in pull request comments and pushing tags'
     required: false
   secrets:
     description: 'Secrets encoded via toJSON. Expected if project has multiple siteIds in package.json. Expects repository secret for each key (ie. `WEBSITE_SECRET_KEY_${siteId}`)'
