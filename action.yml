@@ -315,7 +315,7 @@ runs:
 
     - name: PR Comment
       id: pr-comment
-      if: steps.lighthouse.outputs.scores
+      if: steps.lighthouse.outputs.scores && steps.variables.outputs.isSelfHosted == 'false'
       uses: actions/github-script@v5
       with:
         github-token: ${{ inputs.GITHUB_BOT_TOKEN || github.token }}
