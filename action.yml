@@ -66,7 +66,6 @@ runs:
     - name: Extract Token from Secret
       id: get-token
       shell: bash
-      working-directory: repository
       run: |
         if [ "${{ inputs.secrets }}" != "" ]; then
           token=`echo '${{ inputs.secrets }}' | jq -c .MACHINE_TOKEN`  
