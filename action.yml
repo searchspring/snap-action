@@ -63,11 +63,29 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Extract Token from Secret
+      id: get-token
+      shell: bash
+      working-directory: repository
+      run: |
+        if [ "${{ inputs.secrets }}" != "" ]; then
+          token=`echo '${{ inputs.secrets }}' | jq -c .MACHINE_TOKEN`  
+          if [ "$token" == "" ]; then
+            token=`echo '${{ github.token }}'`
+          elif [ "$token" == "null" ]; then
+            token=`echo '${{ github.token }}'`
+          fi;
+        else
+          token=`echo '${{ github.token }}'`;
+        fi;
+        echo "::set-output name=token::$token";
+        echo "Using token: $token"
+
     - name: Checkout Repository
       id: checkout-repo
       uses: actions/checkout@v2
       with:
-        token: ${{ inputs.secrets ? fromJSON(inputs.secrets)["MACHINE_TOKEN"] : secrets.GITHUB_TOKEN }}
+        token: ${{ steps.get-token.outputs.token }}
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.branch }}
         path: repository
