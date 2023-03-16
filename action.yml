@@ -67,7 +67,7 @@ runs:
       id: checkout-repo
       uses: actions/checkout@v2
       with:
-        token: ${{ inputs.secrets.MACHINE_TOKEN }}
+        token: ${{ inputs.secrets ? fromJSON(inputs.secrets)["MACHINE_TOKEN"] : github.token }}
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.branch }}
         path: repository
