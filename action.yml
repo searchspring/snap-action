@@ -250,16 +250,13 @@ runs:
     - name: Snapfu Recs Sync
       id: snapfu-recs-sync
       shell: bash
+      if: steps.variables.outputs.branch == 'production' && steps.variables.outputs.isSelfHosted == 'false'
       working-directory: repository
       run: |
-        if [ ${{ steps.variables.outputs.branch }} = production ]; then \
           npm install -g snapfu
           snapfu recs sync \
             --secret-key "${{ inputs.secretKey }}" \
             --secrets-ci '${{ steps.variables.outputs.secrets }}';
-        else \
-          echo 'skipping snapfu recs sync for ${{ steps.variables.outputs.branch }} branch'; \
-        fi; \
     
     - name: Lighthouse Tests
       id: lighthouse
