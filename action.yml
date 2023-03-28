@@ -131,7 +131,7 @@ runs:
           siteId=`jq -r '.searchspring.siteId | keys_unsorted | first' < package.json`; \
           echo "::set-output name=siteId::$siteId"; \
           echo "Using siteId: $siteId"; \
-          
+
         else \
           echo "Cannot determine project siteId from package.json"; \
           exit 1; \
@@ -483,7 +483,7 @@ runs:
 
         if [ '${{ steps.variables.outputs.isSelfHosted }}' == 'true' ]; then
           # upload metric to s3 to be used in snapp-updater
-          aws s3 cp --acl public-read ./${{ steps.variables.outputs.repository }}-conclusion-${{ github.event_name }}.json s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
+          aws s3 cp --acl public-read ./${{ steps.variables.outputs.repository }}-conclusion-${{ github.event_name }}.json s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}/
 
           # Conclusion metric used in snapp-updater action status, Should only run on self-hosted
           node scripts/metrics/updater.js \
