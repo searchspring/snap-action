@@ -126,6 +126,12 @@ runs:
           siteNames=`jq -r '[.searchspring.siteId[].name] | join(",")' < package.json`; \
           echo "::set-output name=siteNames::$siteNames"; \
           echo "Using siteNames: $siteNames"; \
+
+          # also set siteId to the first siteId in object format
+          siteId=`jq -r '.searchspring.siteId | keys_unsorted | first' < package.json`; \
+          echo "::set-output name=siteId::$siteId"; \
+          echo "Using siteId: $siteId"; \
+          
         else \
           echo "Cannot determine project siteId from package.json"; \
           exit 1; \
