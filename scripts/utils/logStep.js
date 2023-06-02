@@ -3,8 +3,8 @@ const boxify = require('./boxify');
 const colorize = require('./colorize');
 
 (async function () {
-	const args = getCliArgs(['step', 'message']);
-	const { step, message } = args;
+	const args = getCliArgs(['step']);
+	const { step } = args;
 
-	console.log(colorize.green(boxify(step, message)));
+	console.log(colorize.green(boxify(step)));
 })();
