@@ -109,7 +109,7 @@ const actionFailed = steps.filter((step) => {
     return step.conclusion === 'failure';
 }).length > 0;
 
-console.log(colorize[actionFailed ? 'red' : 'blue'](boxify(`Snap Action Summary ${ actionFailed ? conclusions.failure : conclusions.success }}`)));
+console.log(colorize[actionFailed ? 'red' : 'blue'](boxify(`Snap Action Summary ${ actionFailed ? conclusions.failure : conclusions.success }`)));
 
 steps.forEach((step, index) => {
     const conclusion = conclusions[step.conclusion];
