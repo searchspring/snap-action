@@ -98,14 +98,18 @@ const stepMap = {
 const conclusions = {
     success: '✅',
     failure: '❌',
-    skipped: '⛔',
+    skipped: '➖',
 }
 
 const args = getCliArgs(['steps']);
 const steps = enrichSteps(JSON.parse(args.steps));
 const maxStepNameLength = steps.reduce((max, step) => step.label.length > max ? step.label.length : max, 0);
 
-console.log(colorize.blue(boxify('Snap Action Summary')));
+const actionFailed = steps.filter((step) => {
+    return step.conclusion === 'failure';
+}).length > 0;
+
+console.log(colorize[actionFailed ? 'red' : 'blue'](boxify(`Snap Action Summary ${ actionFailed ? conclusions.failure : conclusions.success }}`)));
 
 steps.forEach((step, index) => {
     const conclusion = conclusions[step.conclusion];
