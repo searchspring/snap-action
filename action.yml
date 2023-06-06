@@ -84,6 +84,7 @@ runs:
       shell: bash
       working-directory: repository
       run: |
+        node ../scripts/utils/logStep.js --step 'Extract Variables'
         echo "Action trigger: ${{ github.event_name }}";
 
         if [ "${{ inputs.branch }}" != "" ]; then
@@ -203,6 +204,7 @@ runs:
       id: authenticate
       shell: bash
       run: |
+        node scripts/utils/logStep.js --step 'Authenticate siteId and secretKey'
         node scripts/smc/verify.js \
           --siteId_Type "${{ steps.variables.outputs.siteId_Type }}" \
           --siteId "${{ steps.variables.outputs.siteId }}" \
@@ -219,6 +221,7 @@ runs:
       env:
         NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
       run: |
+        node ../scripts/utils/logStep.js --step 'Install Packages'
         if [ -f "package-lock.json" ]; then
           npm ci
         else
@@ -230,6 +233,7 @@ runs:
       shell: bash
       working-directory: repository
       run: |
+        node ../scripts/utils/logStep.js --step 'Build Bundle'
         npm run build
         if [ ! -f "dist/bundle.js" ]; then \
           echo "Expected dist directory to contain bundle.js and universal.bundle.js"; \
@@ -247,6 +251,7 @@ runs:
       shell: bash
       working-directory: repository
       run: |
+        node ../scripts/utils/logStep.js --step 'Run Tests'
         if [ ${{ inputs.skipTests }} = true ]; then
           echo 'skipping tests due to skipTests flag'; 
         else
@@ -259,6 +264,7 @@ runs:
       if: steps.variables.outputs.branch == 'production' && steps.variables.outputs.isSelfHosted == 'false'
       working-directory: repository
       run: |
+        node ../scripts/utils/logStep.js --step 'Snapfu Recs Sync'
           npm install -g snapfu
           snapfu recs sync \
             --secret-key "${{ inputs.secretKey }}" \
@@ -272,6 +278,7 @@ runs:
       env:
         LHCI_GITHUB_APP_TOKEN: ${{ inputs.LHCI_GITHUB_APP_TOKEN }}
       run: |
+        node ../scripts/utils/logStep.js --step 'Lighthouse Tests'
         if [ ${{ inputs.skipLighthouse }} = true ]; then \
           echo 'skipping lighthouse tests'; \
         elif [ -f "tests/lighthouse/lighthouserc.js" ]; then \
@@ -288,6 +295,7 @@ runs:
       shell: bash
       working-directory: repository
       run: |
+        node ../scripts/utils/logStep.js --step 'Git Tag'
         git config user.name searchspring-machine
         git config user.email machine@searchspring.com
 
@@ -339,6 +347,7 @@ runs:
       if: ${{ steps.variables.outputs.awsCreds }}
       shell: bash
       run: |
+        node scripts/utils/logStep.js --step 'Lighthouse Metrics'
         if [ ${{ inputs.skipLighthouse }} = false ]; then \
           if [ "${{ github.event_name }}" = "pull_request" ]; then \
             node scripts/metrics/lighthouse.js \
@@ -363,6 +372,7 @@ runs:
       shell: bash
       working-directory: repository
       run: |
+        node ../scripts/utils/logStep.js --step 'Copy Files to S3'
         if [ ${{ inputs.skipPublish }} = true ]; then
           echo "skipping upload of 'dist' and 'public' directories to S3 due to skipPublish flag";
         elif [ "${{ github.event_name }}" = "pull_request" ]; then \
@@ -399,6 +409,7 @@ runs:
       env:
         AWS_MAX_ATTEMPTS: 9
       run: |
+        node ../scripts/utils/logStep.js --step 'Invalidate Files'
         if [ ${{ inputs.skipInvalidation }} = true ]; then
           echo "skipping invalidation due to skipInvalidation flag";
         elif [ ${{ inputs.skipPublish }} = true ]; then
@@ -447,6 +458,7 @@ runs:
       shell: bash
       if: always()
       run: |
+        node scripts/utils/logSummary.js --steps '${{ toJSON(steps) }}'
         duration="$(($(date -u +%s)-${{ steps.variables.outputs.startTime }}))"
 
         if [ '${{ steps.variables.outputs.awsCreds }}' == '' ]; then
