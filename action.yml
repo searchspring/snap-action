@@ -440,6 +440,7 @@ runs:
                 do
                   echo "Invalidating files for siteId $siteId"
                   aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/*"
+                  sleep 3
                 done
             fi
           else
@@ -452,6 +453,7 @@ runs:
                 do
                   echo "Invalidating files for siteId $siteId on branch ${{ steps.variables.outputs.branch }}"
                   aws cloudfront create-invalidation --distribution-id ${{ inputs.aws-cloudfront-distribution-id }} --paths "/$siteId/${{ steps.variables.outputs.branch }}/*"
+                  sleep 3
                 done
             fi
           fi
