@@ -257,6 +257,7 @@ runs:
         if [ ${{ inputs.skipTests }} = true ]; then
           echo 'skipping tests due to skipTests flag'; 
         else
+          echo -e 'pcm.!default {\n type hw\n card 0\n}\n\nctl.!default {\n type hw\n card 0\n}' > ~/.asoundrc;
           npm run test;
         fi;
     
