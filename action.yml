@@ -381,6 +381,7 @@ runs:
           echo "skipping upload of 'dist' and 'public' directories to S3 due to skipPublish flag";
         elif [ "${{ github.event_name }}" = "pull_request" ]; then \
           echo "skipping upload of 'dist' and 'public' directories to S3 for pull_request action triggers"; \
+          if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --cache-control max-age=1800 --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi; \
         else \
           if [ '${{ steps.variables.outputs.siteId_Type }}' = 'string' ]; then \
             aws s3 sync --cache-control max-age=1800 --acl public-read dist s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/${{ steps.variables.outputs.branch }}
@@ -401,8 +402,6 @@ runs:
                 fi
               done;
           fi;
-
-          if [ -f tests/lighthouse/runs/manifest.json ]; then aws s3 sync --cache-control max-age=1800 --acl public-read tests/lighthouse/runs s3://${{ inputs.aws-s3-bucket-name }}/${{ steps.variables.outputs.siteId }}/.lighthouse/${{ steps.variables.outputs.branch }}; fi;
         fi;
 
     - name: Invalidate Files
