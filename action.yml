@@ -466,7 +466,7 @@ runs:
       working-directory: repository
       run: |
         node ../scripts/utils/logStep.js --step 'Commit package-lock.json'
-        git diff-index --quiet HEAD package-lock.json || ( git remote remove origin && \
+        git diff --quiet package-lock.json || ( git remote remove origin && \
         git remote add origin https://${{ github.token }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }} && \
         git add package-lock.json && \
         git commit -m "commit package-lock.json from action" && \
