@@ -465,6 +465,8 @@ runs:
       if: steps.variables.outputs.isSelfHosted == 'true' && github.event_name == 'push'
       working-directory: repository
       run: |
+        git remote remove origin
+        git remote add origin https://${{ secrets.GITHUB_TOKEN }}@github.com/searchspring-implementations/${{ inputs.repository }}
         git add package-lock.json
         git commit -m "commit package-lock.json from action"
         git push
