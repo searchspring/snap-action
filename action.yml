@@ -467,6 +467,7 @@ runs:
       run: |
         node ../scripts/utils/logStep.js --step 'Commit package-lock.json'
         if [ -f "package-lock.json" ]; then
+          git --version
           git add package-lock.json -N
 
           # if file changed, commit it to the branch
