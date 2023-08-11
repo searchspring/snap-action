@@ -469,7 +469,7 @@ runs:
         git remote add origin https://${{ github.token }}@github.com/searchspring-implementations/${{ inputs.repository }}
         git add package-lock.json
         git commit -m "commit package-lock.json from action"
-        git push
+        git push -u origin ${{ steps.variables.outputs.branch }}
       
     - name: Conclusion Metrics
       id: metrics
