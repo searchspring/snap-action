@@ -475,9 +475,9 @@ runs:
           git commit -m "commit package-lock.json from action" && \
           git push -u origin ${{ steps.variables.outputs.branch }} )
         fi
-        
+
     - name: Conclusion Metrics
-      id: metricss
+      id: metrics
       shell: bash
       if: always()
       env:
