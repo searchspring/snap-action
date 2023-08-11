@@ -465,14 +465,15 @@ runs:
       if: steps.variables.outputs.isSelfHosted == 'true' && github.event_name == 'push'
       working-directory: repository
       run: |
-        git remote remove origin
-        git remote add origin https://${{ github.token }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}
-        git add package-lock.json
-        git commit -m "commit package-lock.json from action"
+        node ../scripts/utils/logStep.js --step 'Commit package-lock.json'
+        git diff-index --quiet HEAD || git remote remove origin && \
+        git remote add origin https://${{ github.token }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }} && \
+        git add package-lock.json && \
+        git commit -m "commit package-lock.json from action" && \
         git push -u origin ${{ steps.variables.outputs.branch }}
       
     - name: Conclusion Metrics
-      id: metrics
+      id: metricss
       shell: bash
       if: always()
       env:
