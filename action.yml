@@ -467,10 +467,11 @@ runs:
       run: |
         node ../scripts/utils/logStep.js --step 'Commit package-lock.json'
         if [ -f "package-lock.json" ]; then
-          git add package-lock.json
+          git add package-lock.json -N
 
           # if file changed, commit it to the branch
-          git diff --quiet package-lock.json || ( git remote remove origin && \
+          git diff --quiet -- package-lock.json || ( echo "Committing package-lock.json" && \
+          git remote remove origin && \
           git remote add origin https://${{ github.token }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }} && \
           git commit -m "commit package-lock.json from action" && \
           git push -u origin ${{ steps.variables.outputs.branch }} )
