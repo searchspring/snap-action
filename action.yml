@@ -466,7 +466,7 @@ runs:
       working-directory: repository
       run: |
         git remote remove origin
-        git remote add origin https://${{ github.token }}@github.com/searchspring-implementations/${{ inputs.repository }}
+        git remote add origin https://${{ github.token }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}
         git add package-lock.json
         git commit -m "commit package-lock.json from action"
         git push -u origin ${{ steps.variables.outputs.branch }}
