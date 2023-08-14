@@ -472,8 +472,6 @@ runs:
 
           # if file changed, commit it to the branch
           git diff --quiet -- package-lock.json || ( echo "Committing package-lock.json" && \
-          git remote remove origin && \
-          git remote add origin https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }} && \
           git add package-lock.json && \
           git commit -m "commit package-lock.json from action" && \
           git push -u origin ${{ steps.variables.outputs.branch }} )
