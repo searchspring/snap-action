@@ -462,7 +462,7 @@ runs:
     - name: Commit package-lock.json
       id: commit-package-lock
       shell: bash
-      if: steps.variables.outputs.isSelfHosted == 'true' && github.event_name == 'push'
+      if: steps.variables.outputs.isSelfHosted == 'true' && github.event_name == 'push' && steps.variables.outputs.branch != 'production'
       working-directory: repository
       run: |
         node ../scripts/utils/logStep.js --step 'Commit package-lock.json'
