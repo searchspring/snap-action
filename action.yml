@@ -67,7 +67,7 @@ runs:
       id: checkout-repo
       uses: actions/checkout@v2
       with:
-        token: ${{ github.token }}
+        token: ${{ github.ref_name == 'production' && inputs.GITHUB_BOT_TOKEN || github.token }}
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.branch }}
         path: repository
@@ -299,7 +299,7 @@ runs:
     
     - name: Git Tag
       id: tag
-      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' && inputs.GITHUB_BOT_TOKEN != '' }}
+      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' }}
       shell: bash
       working-directory: repository
       env:
@@ -316,21 +316,21 @@ runs:
             if [ "${{ steps.variables.outputs.packageJSONVersion }}" != "$newTag" ]; then
               echo "Creating tag $newTag"
               git tag -a "$newTag" -m "tagged from snap-action"
-              git push https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}.git $newTag
+              git push origin $newTag
               tag=`echo "$newTag"`;
               echo "::set-output name=tag::$tag";
             fi
         elif [ "${{ steps.variables.outputs.packageJSONVersion }}" != "" ]; then
             # tag doesn't exist, create it from the package.json searchspring.version
             git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
-            git push https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}.git ${{ steps.variables.outputs.packageJSONVersion }}
+            git push origin ${{ steps.variables.outputs.packageJSONVersion }}
             tag=`echo "${{ steps.variables.outputs.packageJSONVersion }}"`;
             echo "::set-output name=tag::$tag";
         fi
 
         if [ "${{ contains(github.event.head_commit.message,'from searchspring-implementations/updater/revert/') }}" == "true" ]; then
           tagToDelete=$(node ./../scripts/tag/getTag.js --tags "$(git tag -l)" --commitMessage "$COMMIT_MESSAGE")
-          git push --delete https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}.git $tagToDelete
+          git push --delete origin $tagToDelete
         fi
 
 
