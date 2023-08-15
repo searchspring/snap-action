@@ -224,11 +224,16 @@ runs:
         NODE_AUTH_TOKEN: ${{ inputs.NODE_AUTH_TOKEN }}
       run: |
         node ../scripts/utils/logStep.js --step 'Install Packages'
-        if [ -f "package-lock.json" ]; then
-          npm ci --prefer-offline
-        else
+        if [ '${{ steps.variables.outputs.isSelfHosted }}' == 'true' ]; then
+          # npm install instead of ci for updater runs - ci requires package.json and package-lock.json to be in sync
           npm install --prefer-offline
-        fi
+        else
+          if [ -f "package-lock.json" ]; then
+            npm ci --prefer-offline
+          else
+            npm install --prefer-offline
+          fi
+        fi;  
 
     - name: Build Bundle
       id: build
