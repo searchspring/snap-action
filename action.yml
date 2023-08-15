@@ -307,7 +307,7 @@ runs:
       run: |
         node ../scripts/utils/logStep.js --step 'Git Tag'
         git remote remove origin
-        git remote add origin https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}
+        git remote add origin https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}.git
         git config user.name searchspring-machine
         git config user.email machine@searchspring.com
 
