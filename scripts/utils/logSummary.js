@@ -88,8 +88,13 @@ const stepMap = {
         label: 'Invalidate Files',
         include: true,
     },
-    'metrics': {
+    'commit-package-lock': {
         order: 18,
+        label: 'Commit package-lock.json',
+        include: true,
+    },
+    'metrics': {
+        order: 19,
         label: 'Conclusion Metrics',
         include: true,
     },
