@@ -306,8 +306,6 @@ runs:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
       run: |
         node ../scripts/utils/logStep.js --step 'Git Tag'
-        git remote remove origin
-        git remote add origin https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}.git
         git config user.name searchspring-machine
         git config user.email machine@searchspring.com
 
@@ -318,21 +316,21 @@ runs:
             if [ "${{ steps.variables.outputs.packageJSONVersion }}" != "$newTag" ]; then
               echo "Creating tag $newTag"
               git tag -a "$newTag" -m "tagged from snap-action"
-              git push origin $newTag
+              git push https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}.git $newTag
               tag=`echo "$newTag"`;
               echo "::set-output name=tag::$tag";
             fi
         elif [ "${{ steps.variables.outputs.packageJSONVersion }}" != "" ]; then
             # tag doesn't exist, create it from the package.json searchspring.version
             git tag -a "${{ steps.variables.outputs.packageJSONVersion }}" -m "tagged from snap-action"
-            git push origin ${{ steps.variables.outputs.packageJSONVersion }}
+            git push https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}.git ${{ steps.variables.outputs.packageJSONVersion }}
             tag=`echo "${{ steps.variables.outputs.packageJSONVersion }}"`;
             echo "::set-output name=tag::$tag";
         fi
 
         if [ "${{ contains(github.event.head_commit.message,'from searchspring-implementations/updater/revert/') }}" == "true" ]; then
           tagToDelete=$(node ./../scripts/tag/getTag.js --tags "$(git tag -l)" --commitMessage "$COMMIT_MESSAGE")
-          git push --delete origin $tagToDelete
+          git push --delete https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}.git $tagToDelete
         fi
 
 
