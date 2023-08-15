@@ -299,13 +299,15 @@ runs:
     
     - name: Git Tag
       id: tag
-      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' }}
+      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' && inputs.GITHUB_BOT_TOKEN != '' }}
       shell: bash
       working-directory: repository
       env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
       run: |
         node ../scripts/utils/logStep.js --step 'Git Tag'
+        git remote remove origin
+        git remote add origin https://${{ inputs.GITHUB_BOT_TOKEN }}@github.com/searchspring-implementations/${{ steps.variables.outputs.repository }}
         git config user.name searchspring-machine
         git config user.email machine@searchspring.com
 
