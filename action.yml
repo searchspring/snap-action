@@ -468,6 +468,8 @@ runs:
         node ../scripts/utils/logStep.js --step 'Commit package-lock.json'
         if [ -f "package-lock.json" ]; then
           # "intent-to-add" to allow diff of untracked file
+          git config user.name searchspring-machine
+          git config user.email machine@searchspring.com
           git add package-lock.json --intent-to-add
 
           # if file changed, commit it to the branch
