@@ -266,17 +266,17 @@ runs:
           npm run test;
         fi;
     
-    # - name: Snapfu Recs Sync
-    #   id: snapfu-recs-sync
-    #   shell: bash
-    #   if: steps.variables.outputs.branch == 'production' && steps.variables.outputs.isSelfHosted == 'false'
-    #   working-directory: repository
-    #   run: |
-    #     node ../scripts/utils/logStep.js --step 'Snapfu Recs Sync'
-    #       npm install -g snapfu
-    #       snapfu recs sync \
-    #         --secret-key "${{ inputs.secretKey }}" \
-    #         --secrets-ci '${{ steps.variables.outputs.secrets }}';
+    - name: Snapfu Recs Sync
+      id: snapfu-recs-sync
+      shell: bash
+      if: steps.variables.outputs.branch == 'production' && steps.variables.outputs.isSelfHosted == 'false'
+      working-directory: repository
+      run: |
+        node ../scripts/utils/logStep.js --step 'Snapfu Recs Sync'
+          npm install -g snapfu
+          snapfu recs sync \
+            --secret-key "${{ inputs.secretKey }}" \
+            --secrets-ci '${{ steps.variables.outputs.secrets }}';
     
     - name: Lighthouse Tests
       id: lighthouse
