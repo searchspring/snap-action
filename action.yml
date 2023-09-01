@@ -299,7 +299,7 @@ runs:
     
     - name: Git Tag
       id: tag
-      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' }}
+      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' && github.base_ref == 'production' }}
       shell: bash
       working-directory: repository
       env:
