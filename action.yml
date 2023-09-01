@@ -84,10 +84,6 @@ runs:
       shell: bash
       working-directory: repository
       run: |
-        echo "head_ref: ${{ github.head_ref }}"
-        echo "head_ref: ${{ github.ref_name }}"
-        echo "head_ref: ${{ github.base_ref }}"
-        
         node ../scripts/utils/logStep.js --step 'Extract Variables'
         echo "Action trigger: ${{ github.event_name }}";
 
@@ -303,7 +299,7 @@ runs:
     
     - name: Git Tag
       id: tag
-      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' }}
+      if: ${{ contains(steps.variables.outputs.packageJSONVersion, '.') && steps.variables.outputs.branch == 'production' && github.base_ref == 'production' }}
       shell: bash
       working-directory: repository
       env:
