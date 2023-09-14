@@ -257,6 +257,8 @@ runs:
       if: github.event_name == 'push' && github.ref_name != 'production'
       shell: bash
       working-directory: repository
+      env:
+        CYPRESS_VERIFY_TIMEOUT: 60000
       run: |
         node ../scripts/utils/logStep.js --step 'Run Tests'
         if [ ${{ inputs.skipTests }} = true ]; then
