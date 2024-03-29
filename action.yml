@@ -77,7 +77,7 @@ runs:
       id: setup-node
       uses: actions/setup-node@v2
       with:
-        node-version: 16
+        node-version: 20
 
     - name: Extract Variables
       id: variables
