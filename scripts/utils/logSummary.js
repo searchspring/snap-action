@@ -58,43 +58,48 @@ const stepMap = {
         label: 'Snapfu Recs Sync',
         include: true,
     },
-    'lighthouse': {
+    'snapfu-badges-sync': {
         order: 12,
+        label: 'Snapfu Badges Sync',
+        include: true,
+    },
+    'lighthouse': {
+        order: 13,
         label: 'Lighthouse Tests',
         include: true,
     },
     'tag': {
-        order: 13,
+        order: 14,
         label: 'Git Tag',
         include: false,
     },
     'pr-comment': {
-        order: 14,
+        order: 15,
         label: 'PR Comment',
         include: true,
     },
     'lighthouse-metrics': {
-        order: 15,
+        order: 16,
         label: 'Lighthouse Metrics',
         include: true,
     },
     's3-upload': {
-        order: 16,
+        order: 17,
         label: 'Copy Files to S3',
         include: true,
     },
     'invalidation': {
-        order: 17,
+        order: 18,
         label: 'Invalidate Files',
         include: true,
     },
     'commit-package-lock': {
-        order: 18,
+        order: 19,
         label: 'Commit package-lock.json',
         include: true,
     },
     'metrics': {
-        order: 19,
+        order: 20,
         label: 'Conclusion Metrics',
         include: true,
     },
