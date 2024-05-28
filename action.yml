@@ -141,7 +141,7 @@ runs:
         pullRequestID=${{ github.event.pull_request.number }}
         echo "::set-output name=pullRequestID::$pullRequestID"
         echo "Using pullRequestID: $pullRequestID"
-        repository=`git config --get remote.origin.url | grep -Eo "[^\/]+$" | sed 's/.git//g'`
+        repository=`git config --get remote.origin.url | grep -Eo "[^\/]+$" | sed 's/\.git$//g'`
         echo "::set-output name=repository::$repository"
         echo "Using repository: $repository"
         startTime=`date -u +%s`
