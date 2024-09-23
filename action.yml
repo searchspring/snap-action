@@ -78,7 +78,8 @@ runs:
       uses: actions/setup-node@v2
       with:
         node-version: 20
-        registry-url: https://npm.pkg.github.com/searchspring
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@searchspring'
 
     - name: Extract Variables
       id: variables
