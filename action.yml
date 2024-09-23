@@ -369,12 +369,16 @@ runs:
         node scripts/utils/logStep.js --step 'Lighthouse Metrics'
         if [ ${{ inputs.skipLighthouse }} = false ]; then \
           if [ "${{ github.event_name }}" = "pull_request" ]; then \
-            node scripts/metrics/lighthouse.js \
-              --siteId "${{ steps.variables.outputs.siteId }}" \
-              --branch "${{ steps.variables.outputs.branch }}" \
-              --repositoryOwner "${{ github.repository_owner }}" \
-              --repository "${{ steps.variables.outputs.repository }}" \
-              --issueNumber "${{ steps.variables.outputs.pullRequestID }}";
+            if [ -f "tests/lighthouse/lighthouserc.js" ]; then \
+              node scripts/metrics/lighthouse.js \
+                --siteId "${{ steps.variables.outputs.siteId }}" \
+                --branch "${{ steps.variables.outputs.branch }}" \
+                --repositoryOwner "${{ github.repository_owner }}" \
+                --repository "${{ steps.variables.outputs.repository }}" \
+                --issueNumber "${{ steps.variables.outputs.pullRequestID }}";
+            else \
+              echo 'lighthouserc.js file not found in repository, skipping lighthouse metrics'; \
+            fi; \
           else \
             echo "Skipping lighthouse metrics generation due to non pull_request event"; \
           fi;
