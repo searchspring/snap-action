@@ -229,8 +229,7 @@ runs:
       run: |
         node ../scripts/utils/logStep.js --step 'Custom Snapfu Patch'
           npm install -g snapfu
-          snapfu about --ci
-          ls ~/.searchspring
+          snapfu patch fetch
           snapfu patch apply ${{ steps.variables.outputs.customPatchName }} \
             --ci
             --secret-key "${{ inputs.secretKey }}" \
