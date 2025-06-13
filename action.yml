@@ -228,6 +228,7 @@ runs:
       working-directory: repository
       run: |
         node ../scripts/utils/logStep.js --step 'Custom Snapfu Patch'
+          npm install -g snapfu
           snapfu patch apply ${{ steps.variables.outputs.customPatchName }} \
             --ci
             --secret-key "${{ inputs.secretKey }}" \
