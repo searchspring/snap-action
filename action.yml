@@ -103,6 +103,15 @@ runs:
           exit 1;
         fi;
 
+        # extract patch version from 'updater/patch/patchVersion'
+        patchVersion=echo "$branch" | cut -d "/" -f3
+        # if patchVersion does not match sem versioning, assume this is a custom patch and use it's patchVersion as the custom patch name
+        if [[ ! $patchVersion =~ ^[0-9]+\.[0-9]+\.[0-9]+-?[0-9]*$ ]]; then
+          customPatchName=$patchVersion
+        fi;
+        echo "::set-output name=customPatchName::$customPatchName";
+        echo "Using customPatchName: $customPatchName";
+
         secrets=`echo '${{ inputs.secrets }}' | jq -c .`;
         echo "::set-output name=secrets::$secrets";
         echo "Using secrets: $secrets";
@@ -211,6 +220,18 @@ runs:
           --siteIds "${{ steps.variables.outputs.siteIds }}" \
           --siteNames "${{ steps.variables.outputs.siteNames }}" \
           --secrets-ci '${{ steps.variables.outputs.secrets }}';
+
+    - name: Custom Snapfu Patch
+      id: custom-snapfu-patch
+      shell: bash
+      if: steps.variables.outputs.isSelfHosted == 'true' && steps.variables.outputs.customPatchName != '' && github.event_name == 'push' && steps.variables.outputs.branch != 'production'
+      working-directory: repository
+      run: |
+        node ../scripts/utils/logStep.js --step 'Custom Snapfu Patch'
+          snapfu patch apply ${{ steps.variables.outputs.customPatchName }} \
+            --ci
+            --secret-key "${{ inputs.secretKey }}" \
+            --secrets-ci '${{ steps.variables.outputs.secrets }}';
 
     - name: Install Packages
       id: install
@@ -477,13 +498,13 @@ runs:
           fi
         fi;
     
-    - name: Commit package-lock.json
-      id: commit-package-lock
+    - name: Commit Files
+      id: commit-files
       shell: bash
       if: steps.variables.outputs.isSelfHosted == 'true' && github.event_name == 'push' && steps.variables.outputs.branch != 'production'
       working-directory: repository
       run: |
-        node ../scripts/utils/logStep.js --step 'Commit package-lock.json'
+        node ../scripts/utils/logStep.js --step 'Commit Files'
         if [ -f "package-lock.json" ]; then
           # "intent-to-add" to allow diff of untracked file
           git config user.name searchspring-machine
@@ -494,8 +515,18 @@ runs:
           git diff --quiet -- package-lock.json || ( echo "Committing package-lock.json" && \
           git add package-lock.json && \
           git commit -m "commit package-lock.json from action" && \
-          git push -u origin ${{ steps.variables.outputs.branch }} )
+          shouldPush=true )
         fi
+
+        if [ '${{ steps.variables.outputs.customPatchName }}' != '' ]; then
+          git add . && \
+          git commit -m "commit all modified files from custom patch ${{ steps.variables.outputs.customPatchName }}" && \
+          shouldPush=true
+        fi;
+
+        if [ '$shouldPush' == 'true' ]; then
+          git push -u origin ${{ steps.variables.outputs.branch }}
+        fi;
 
     - name: Conclusion Metrics
       id: metrics
@@ -532,7 +563,7 @@ runs:
               patchId=$patchId \
               url='https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}' \
               runAttempt=${{ github.run_attempt }} \
-              failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.snapfu-badges-sync.conclusion == 'Failure' && 'snapfu-badges-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.tag.conclusion == 'Failure' && 'tag' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || steps.start-metrics.conclusion == 'Failure' && 'start-metrics' || steps.commit-package-lock.conclusion == 'Failure' && 'commit-package-lock' || ''}}' \
+              failedStep='${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.snapfu-badges-sync.conclusion == 'Failure' && 'snapfu-badges-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.tag.conclusion == 'Failure' && 'tag' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || steps.start-metrics.conclusion == 'Failure' && 'start-metrics' || steps.commit-files.conclusion == 'Failure' && 'commit-files' || steps.custom-snapfu-patch.conclusion == 'Failure' && 'custom-snapfu-patch' || ''}}' \
             ) \
             | tee ${{ steps.variables.outputs.repository }}-conclusion-${{ github.event_name }}-${{ steps.variables.outputs.packageJSONVersion }}.json SnapAction-${{ steps.variables.outputs.repository }}-${{ github.event_name }}-$(date -u +"%Y_%m_%d_%H%M").json && \
           cat ./SnapAction*.json && \
@@ -554,7 +585,7 @@ runs:
             --startTime "" \
             --conclusion "${{ github.action_status }}" \
             --duration "$duration" \
-            --failedStep "${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.snapfu-badges-sync.conclusion == 'Failure' && 'snapfu-badges-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.tag.conclusion == 'Failure' && 'tag' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || steps.start-metrics.conclusion == 'Failure' && 'start-metrics' || steps.commit-package-lock.conclusion == 'Failure' && 'commit-package-lock' || ''}}" \
+            --failedStep "${{ steps.checkout-repo.conclusion == 'Failure' && 'checkout-repo' || steps.configure-aws.conclusion == 'Failure' && 'configure-aws' || steps.variables.conclusion == 'Failure' && 'variables' || steps.authenticate.conclusion == 'Failure' && 'authenticate' || steps.setup-node.conclusion == 'Failure' && 'setup-node' || steps.cache.conclusion == 'Failure' && 'cache' || steps.install.conclusion == 'Failure' && 'install' || steps.build.conclusion == 'Failure' && 'build' || steps.test.conclusion == 'Failure' && 'test' || steps.snapfu-recs-sync.conclusion == 'Failure' && 'snapfu-recs-sync' || steps.snapfu-badges-sync.conclusion == 'Failure' && 'snapfu-badges-sync' || steps.lighthouse.conclusion == 'Failure' && 'lighthouse' || steps.tag.conclusion == 'Failure' && 'tag' || steps.pr-comment.conclusion == 'Failure' && 'pr-comment' || steps.s3-upload.conclusion == 'Failure' && 's3-upload' || steps.lighthouse-metrics.conclusion == 'Failure' && 'lighthouse-metrics' || steps.invalidation.conclusion == 'Failure' && 'invalidation' || steps.metrics.conclusion == 'Failure' && 'metrics' || steps.start-metrics.conclusion == 'Failure' && 'start-metrics' || steps.commit-files.conclusion == 'Failure' && 'commit-files' || steps.custom-snapfu-patch.conclusion == 'Failure' && 'custom-snapfu-patch' || ''}}" \
             --commitMessage "$COMMIT_MESSAGE" \
             --url "https://github.com/${{ github.repository_owner }}/${{ steps.variables.outputs.repository }}/actions/runs/${{ github.run_id }}" \
             --secrets-ci '${{ steps.variables.outputs.secrets }}';
