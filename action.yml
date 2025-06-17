@@ -231,7 +231,7 @@ runs:
           npm install -g snapfu
           snapfu patch fetch
           snapfu patch apply ${{ steps.variables.outputs.customPatchName }} \
-            --ci
+            --ci \
             --secret-key "${{ inputs.secretKey }}" \
             --secrets-ci '${{ steps.variables.outputs.secrets }}';
 
