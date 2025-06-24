@@ -232,13 +232,6 @@ runs:
           snapfu patch fetch
           SNAPFU_SECRET_KEY="${{ inputs.secretKey }}"
           SNAPFU_SECRETS_CI='${{ steps.variables.outputs.secrets }}'
-          
-          echo "verifying secrets:"
-          echo '$SNAPFU_SECRETS_CI'
-          echo '${{ steps.variables.outputs.secrets }}'
-          
-          snapfu secrets verify --ci --secrets-ci $SNAPFU_SECRETS_CI
-          
           snapfu patch apply ${{ steps.variables.outputs.customPatchName }} \
             --dev \
             --ci \
