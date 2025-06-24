@@ -230,8 +230,10 @@ runs:
         node ../scripts/utils/logStep.js --step 'Custom Snapfu Patch'
           npm install -g snapfu
           snapfu patch fetch
+          echo "Verifying secrets"
           snapfu secrets verify --ci --secret-key "${{ inputs.secretKey }}" --secrets-ci '${{ steps.variables.outputs.secrets }}'
-          snapfu patch apply ${{ steps.variables.outputs.customPatchName }} --ci
+          echo "Applying patch ${{ steps.variables.outputs.customPatchName }}"
+          snapfu patch apply ${{ steps.variables.outputs.customPatchName }} --ci --secret-key "${{ inputs.secretKey }}" --secrets-ci '${{ steps.variables.outputs.secrets }}'
 
     - name: Install Packages
       id: install
