@@ -527,7 +527,7 @@ runs:
           shouldPush=true
         fi;
 
-        if [ '$shouldPush' == 'true' ]; then
+        if [ $shouldPush == 'true' ]; then
           git push -u origin ${{ steps.variables.outputs.branch }}
         fi;
 
