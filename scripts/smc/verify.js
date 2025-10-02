@@ -10,8 +10,9 @@ const verify = (siteId, name, secretKey) => {
             name
         });
 
+        const domain = siteId.startsWith('at') ? 'athoscommerce.io' : 'searchspring.io';
         const options = {
-            hostname: 'smc-config-api.kube.searchspring.io',
+            hostname: `smc-config-api.kube.${domain}`,
             port: 443,
             path: `/api/customer/${siteId}/verify`,
             method: 'POST',
