@@ -38,68 +38,73 @@ const stepMap = {
         label: 'Authenticate siteId and secretKey',
         include: true,
     },
-    'install': {
+    'custom-snapfu-patch': {
         order: 8,
+        label: 'Custom Snapfu Patch',
+        include: true,
+    },
+    'install': {
+        order: 9,
         label: 'Install Packages',
         include: true,
     },
     'build': {
-        order: 9,
+        order: 10,
         label: 'Build Bundle',
         include: true,
     },
     'test': {
-        order: 10,
+        order: 11,
         label: 'Run Tests',
         include: true,
     },
     'snapfu-recs-sync': {
-        order: 11,
+        order: 12,
         label: 'Snapfu Recs Sync',
         include: true,
     },
     'snapfu-badges-sync': {
-        order: 12,
+        order: 13,
         label: 'Snapfu Badges Sync',
         include: true,
     },
     'lighthouse': {
-        order: 13,
+        order: 14,
         label: 'Lighthouse Tests',
         include: true,
     },
     'tag': {
-        order: 14,
+        order: 15,
         label: 'Git Tag',
         include: false,
     },
     'pr-comment': {
-        order: 15,
+        order: 16,
         label: 'PR Comment',
         include: true,
     },
     'lighthouse-metrics': {
-        order: 16,
+        order: 17,
         label: 'Lighthouse Metrics',
         include: true,
     },
     's3-upload': {
-        order: 17,
+        order: 18,
         label: 'Copy Files to S3',
         include: true,
     },
     'invalidation': {
-        order: 18,
+        order: 19,
         label: 'Invalidate Files',
         include: true,
     },
-    'commit-package-lock': {
-        order: 19,
-        label: 'Commit package-lock.json',
+    'commit-files': {
+        order: 20,
+        label: 'Commit Files',
         include: true,
     },
     'metrics': {
-        order: 20,
+        order: 21,
         label: 'Conclusion Metrics',
         include: true,
     },
