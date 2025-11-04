@@ -24,6 +24,13 @@ const verify = (siteId, name, secretKey) => {
         };
 
         const req = https.request(options, res => {
+
+            if(res.statusCode === 423) {
+                console.log(`Authentication failed for siteId ${siteId} because it is not active`);
+                resolve(false);
+                return;
+            }
+
             res.on('data', res => {
                 try {
                     const response = JSON.parse(res);
